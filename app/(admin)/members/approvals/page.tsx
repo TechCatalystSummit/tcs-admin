@@ -1,5 +1,5 @@
-import { PlaceholderPage } from "@/shared/components/layout/PlaceholderPage";
+import ApprovalsPage from "@/features/members/pages/ApprovalsPage";
 
-export default function ApprovalsPage() {
-  return <PlaceholderPage title="Member Approvals" subtitle="Review pending membership applications" />;
+export default function Page() {
+  return <ApprovalsPage />;
 }

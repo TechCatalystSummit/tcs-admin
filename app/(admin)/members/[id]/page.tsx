@@ -1,12 +1,6 @@
-import { PlaceholderPage } from "@/shared/components/layout/PlaceholderPage";
+import MemberDetailPage from "@/features/members/pages/MemberDetailPage";
 
-export default function MemberDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  return (
-    <MemberDetail params={params} />
-  );
-}
-
-async function MemberDetail({ params }: { params: Promise<{ id: string }> }) {
+export default async function Page({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  return <PlaceholderPage title={`Member ${id}`} subtitle="Member profile and admin notes" />;
+  return <MemberDetailPage memberId={id} />;
 }

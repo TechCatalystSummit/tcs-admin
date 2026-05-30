@@ -1,5 +1,5 @@
-import { PlaceholderPage } from "@/shared/components/layout/PlaceholderPage";
+import MembersPage from "@/features/members/pages/MembersPage";
 
-export default function MembersPage() {
-  return <PlaceholderPage title="Members" subtitle="Manage all platform members" />;
+export default function Page() {
+  return <MembersPage />;
 }
