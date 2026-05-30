@@ -1,5 +1,3 @@
-import { PlaceholderPage } from "@/shared/components/layout/PlaceholderPage";
+import NewEventPage from "@/features/events/pages/NewEventPage";
 
-export default function NewEventPage() {
-  return <PlaceholderPage title="Create Event" subtitle="Multi-step event creation form" />;
-}
+export default NewEventPage;

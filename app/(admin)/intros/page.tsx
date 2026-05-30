@@ -1,5 +1,5 @@
-import { PlaceholderPage } from "@/shared/components/layout/PlaceholderPage";
+import IntrosPage from "@/features/intros/pages/IntrosPage";
 
-export default function IntrosPage() {
-  return <PlaceholderPage title="Intros" subtitle="Curated introduction workflow" />;
+export default function Page() {
+  return <IntrosPage />;
 }

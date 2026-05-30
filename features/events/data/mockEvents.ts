@@ -1,0 +1,220 @@
+import type { Event, EventAttendee, EventType } from "../types";
+
+const attendeeNames = [
+  ["Sarah Chen", "sarah@nexusventures.com", "executive"],
+  ["Marcus Webb", "marcus@apexcapital.com", "builder"],
+  ["Elena Rodriguez", "elena@cloudscale.io", "community"],
+  ["James Park", "james@dataforge.ai", "executive"],
+  ["Aisha Patel", "aisha@pulseai.com", "builder"],
+  ["David Kim", "david@stellarlabs.com", "partner"],
+  ["Lisa Thompson", "lisa@horizonbio.com", "legacy"],
+  ["Ryan O'Brien", "ryan@meridian.io", "community"],
+] as const;
+
+function makeAttendees(eventId: string, count: number, checkedIn: number): EventAttendee[] {
+  return Array.from({ length: count }, (_, i) => {
+    const [name, email, tier] = attendeeNames[i % attendeeNames.length];
+    const isCheckedIn = i < checkedIn;
+    return {
+      id: `${eventId}_att_${String(i + 1).padStart(2, "0")}`,
+      memberId: `usr_${String((i % 25) + 1).padStart(3, "0")}`,
+      name,
+      email,
+      tier,
+      rsvpStatus: i === count - 1 && count > 3 ? "no-show" : "confirmed",
+      checkedInAt: isCheckedIn ? "2026-05-15T09:30:00" : undefined,
+      isVip: tier === "executive" || tier === "legacy",
+    };
+  });
+}
+
+function makeEvent(
+  index: number,
+  overrides: Partial<Event> & Pick<Event, "id" | "title" | "status" | "type" | "startDate" | "endDate">,
+): Event {
+  const rsvpCount = overrides.rsvpCount ?? 45 + index * 8;
+  const checkedInCount = overrides.checkedInCount ?? (overrides.status === "past" || overrides.status === "live" ? Math.floor(rsvpCount * 0.85) : 0);
+  const vipCount = overrides.vipCount ?? Math.floor(rsvpCount * 0.15);
+  const noShowCount = overrides.noShowCount ?? (overrides.status === "past" ? Math.floor(rsvpCount * 0.05) : 0);
+
+  return {
+    description: overrides.description ?? "A flagship TechCatalyst Summit experience connecting founders, investors, and operators.",
+    location: overrides.location ?? "Miami, FL",
+    venue: overrides.venue ?? "Faena Forum",
+    capacity: overrides.capacity ?? 200,
+    rsvpCount,
+    checkedInCount,
+    vipCount,
+    noShowCount,
+    sponsors: overrides.sponsors ?? ["Nexus Ventures", "Apex Capital"],
+    speakers: overrides.speakers ?? [
+      {
+        id: `spk_${index}_01`,
+        name: "Dr. Amara Okonkwo",
+        title: "Chief AI Officer",
+        company: "Horizon Bio",
+        bio: "Leading enterprise AI adoption across healthcare and fintech.",
+      },
+      {
+        id: `spk_${index}_02`,
+        name: "Tom Bradley",
+        title: "Managing Partner",
+        company: "Stellar Labs",
+        bio: "Early-stage investor focused on B2B SaaS and deep tech.",
+      },
+    ],
+    agenda: overrides.agenda ?? [
+      { id: `ag_${index}_01`, time: "09:00", title: "Registration & Networking", speakerId: undefined },
+      { id: `ag_${index}_02`, time: "10:00", title: "Opening Keynote", speakerId: `spk_${index}_01` },
+      { id: `ag_${index}_03`, time: "11:30", title: "Founder Panel", speakerId: `spk_${index}_02` },
+      { id: `ag_${index}_04`, time: "13:00", title: "Lunch & Sponsor Showcase" },
+      { id: `ag_${index}_05`, time: "15:00", title: "Curated Intros Session" },
+    ],
+    attendees: overrides.attendees ?? makeAttendees(overrides.id, Math.min(rsvpCount, 8), Math.min(checkedInCount, 8)),
+    recap: overrides.recap,
+    ...overrides,
+  };
+}
+
+export const mockEvents: Event[] = [
+  makeEvent(0, {
+    id: "evt_001",
+    title: "TCS Summit 2026 — Miami",
+    type: "summit",
+    status: "published",
+    startDate: "2026-06-15",
+    endDate: "2026-06-17",
+    location: "Miami, FL",
+    venue: "Faena Forum",
+    capacity: 500,
+    rsvpCount: 312,
+    checkedInCount: 0,
+    vipCount: 48,
+    sponsors: ["Nexus Ventures", "Apex Capital", "CloudScale", "DataForge"],
+    description: "The flagship annual summit — 3 days of keynotes, curated intros, and executive dinners.",
+  }),
+  makeEvent(1, {
+    id: "evt_002",
+    title: "AI Builders Workshop",
+    type: "workshop",
+    status: "live",
+    startDate: "2026-05-30",
+    endDate: "2026-05-30",
+    location: "San Francisco, CA",
+    venue: "SOMA Innovation Hub",
+    capacity: 80,
+    rsvpCount: 72,
+    checkedInCount: 58,
+    vipCount: 12,
+    noShowCount: 3,
+  }),
+  makeEvent(2, {
+    id: "evt_003",
+    title: "Founder Dinner — Austin",
+    type: "dinner",
+    status: "published",
+    startDate: "2026-06-08",
+    endDate: "2026-06-08",
+    location: "Austin, TX",
+    venue: "Uchi Private Room",
+    capacity: 24,
+    rsvpCount: 22,
+    vipCount: 22,
+    sponsors: ["Meridian Health"],
+  }),
+  makeEvent(3, {
+    id: "evt_004",
+    title: "Investor Networking Night",
+    type: "networking",
+    status: "published",
+    startDate: "2026-07-12",
+    endDate: "2026-07-12",
+    location: "New York, NY",
+    venue: "The Standard High Line",
+    capacity: 120,
+    rsvpCount: 89,
+    vipCount: 18,
+  }),
+  makeEvent(4, {
+    id: "evt_005",
+    title: "TCS Miami 2025 Recap",
+    type: "summit",
+    status: "past",
+    startDate: "2025-11-10",
+    endDate: "2025-11-12",
+    location: "Miami, FL",
+    venue: "Faena Forum",
+    capacity: 450,
+    rsvpCount: 398,
+    checkedInCount: 341,
+    vipCount: 62,
+    noShowCount: 19,
+    recap: "Record attendance with 340+ check-ins. 89 curated intros completed. $2.4M in deals initiated.",
+  }),
+  makeEvent(5, {
+    id: "evt_006",
+    title: "Executive Masterclass: Fundraising",
+    type: "masterclass",
+    status: "draft",
+    startDate: "2026-08-20",
+    endDate: "2026-08-20",
+    location: "Boston, MA",
+    venue: "Cambridge Innovation Center",
+    capacity: 40,
+    rsvpCount: 0,
+    checkedInCount: 0,
+    vipCount: 0,
+    noShowCount: 0,
+    sponsors: [],
+    attendees: [],
+  }),
+  makeEvent(6, {
+    id: "evt_007",
+    title: "Sponsor Showcase Webinar",
+    type: "webinar",
+    status: "past",
+    startDate: "2026-04-15",
+    endDate: "2026-04-15",
+    location: "Virtual",
+    venue: "Zoom",
+    capacity: 300,
+    rsvpCount: 156,
+    checkedInCount: 134,
+    vipCount: 8,
+    noShowCount: 11,
+    recap: "Strong sponsor engagement — 12 demo requests logged post-event.",
+  }),
+  makeEvent(7, {
+    id: "evt_008",
+    title: "Builder Community Meetup",
+    type: "networking",
+    status: "published",
+    startDate: "2026-06-22",
+    endDate: "2026-06-22",
+    location: "Seattle, WA",
+    venue: "WeWork South Lake Union",
+    capacity: 60,
+    rsvpCount: 41,
+    vipCount: 4,
+  }),
+  makeEvent(8, {
+    id: "evt_009",
+    title: "Legacy Member Retreat",
+    type: "dinner",
+    status: "draft",
+    startDate: "2026-09-05",
+    endDate: "2026-09-07",
+    location: "Napa Valley, CA",
+    venue: "Auberge du Soleil",
+    capacity: 30,
+    rsvpCount: 0,
+    checkedInCount: 0,
+    vipCount: 0,
+    noShowCount: 0,
+    sponsors: ["Pulse AI"],
+    attendees: [],
+  }),
+];
+
+export const EVENT_TYPES: EventType[] = ["summit", "workshop", "networking", "dinner", "webinar", "masterclass"];
+export const EVENT_STATUSES = ["draft", "published", "live", "past"] as const;

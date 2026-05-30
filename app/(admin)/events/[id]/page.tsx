@@ -1,10 +1,6 @@
-import { PlaceholderPage } from "@/shared/components/layout/PlaceholderPage";
+import EventDetailPage from "@/features/events/pages/EventDetailPage";
 
-export default function EventDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  return <EventDetail params={params} />;
-}
-
-async function EventDetail({ params }: { params: Promise<{ id: string }> }) {
+export default async function Page({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  return <PlaceholderPage title={`Event ${id}`} subtitle="Event details, attendees, and check-ins" />;
+  return <EventDetailPage eventId={id} />;
 }
