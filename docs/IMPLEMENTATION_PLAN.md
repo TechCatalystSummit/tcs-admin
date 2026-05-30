@@ -159,6 +159,8 @@ All 12 admin modules ship with mock data, Zustand stores, responsive shell, comm
 
 ### Deferred to Phase 2 (per build plan §12)
 
+**Note:** API / database (Supabase, Postgres) work is intentionally deferred. Phase 2 starts when backend is ready.
+
 | Area | Work |
 |---|---|
 | Data layer | Replace `mock*.ts` with Supabase API modules |
@@ -167,6 +169,24 @@ All 12 admin modules ship with mock data, Zustand stores, responsive shell, comm
 | Integrations | Dub.co (QR), SendGrid/Resend (outreach), Stripe (payments) |
 | Shared UI | shadcn Select, Switch, Checkbox, DropdownMenu, Tooltip |
 | Optional UX | Member profile Sheet slide-over, AgendaBuilder, SpeakerManager |
+
+---
+
+## Sprint 11 — Mobile Brand Alignment ✓
+
+**Goal:** Match Summit-App branding (logo, colors, auth hero) without API/DB changes.
+
+| Task | Deliverable |
+|---|---|
+| 11.1 | Copy `Summit-App/assets/logo.png` → `public/logo.png` |
+| 11.2 | `core/constants/brand.ts` — app name, tagline, auth copy |
+| 11.3 | `AppLogo`, `AuthBrandHero` — mobile-matched auth gradient |
+| 11.4 | Login split layout, sidebar logo, favicon metadata |
+| 11.5 | Gold gradient token aligned to mobile (`#C9952A` → `#D0A84A`) |
+
+**Verify:** `npx tsc --noEmit && npm run lint && npm run build`
+
+**Commit:** `feat: align admin branding with mobile app`
 
 ---
 

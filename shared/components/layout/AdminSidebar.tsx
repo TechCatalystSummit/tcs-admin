@@ -1,11 +1,13 @@
 "use client";
 
+import { brand, logo } from "@/core/constants/brand";
 import { navItems } from "@/core/constants/nav";
-import { cn } from "@/shared/utils/cn";
+import { useAuthStore } from "@/features/auth/store/useAuthStore";
 import { Avatar } from "@/shared/components/ui/Avatar";
 import { Badge } from "@/shared/components/ui/Badge";
-import { useAuthStore } from "@/features/auth/store/useAuthStore";
+import { cn } from "@/shared/utils/cn";
 import { ChevronDown, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
@@ -40,11 +42,17 @@ export function AdminSidebar() {
       )}
     >
       <div className={cn("flex items-center gap-3 p-4 border-b border-white/10", !showLabels && "justify-center")}>
-        <div className="h-8 w-8 shrink-0 rounded-lg bg-brand-gradient" />
+        <Image
+          src={logo.src}
+          alt={logo.alt}
+          width={showLabels ? 36 : 32}
+          height={showLabels ? 32 : 28}
+          className="shrink-0 object-contain"
+        />
         {showLabels && (
           <div>
-            <p className="text-sm font-bold text-white">TCS Admin</p>
-            <p className="text-[10px] text-hint">TechCatalyst Summit</p>
+            <p className="text-sm font-bold text-white">{brand.adminTitle}</p>
+            <p className="text-[10px] text-hint">{brand.appName}</p>
           </div>
         )}
       </div>

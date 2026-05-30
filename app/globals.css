@@ -35,7 +35,29 @@
 }
 
 @utility bg-gold-gradient {
-  background-image: linear-gradient(to bottom, #d0a84a, #e8c46a);
+  background-image: linear-gradient(to bottom, #c9952a, #d0a84a);
+}
+
+@utility bg-auth-gradient {
+  background-image: linear-gradient(
+    to bottom,
+    #0a2050 0%,
+    #05112a 22%,
+    #123d8c 48%,
+    #1a73e8 62%,
+    #f7f7f9 97%,
+    #ffffff 100%
+  );
+}
+
+@utility bg-auth-panel-gradient {
+  background-image: linear-gradient(
+    to bottom,
+    #0a2050 0%,
+    #05112a 30%,
+    #123d8c 65%,
+    #1a73e8 100%
+  );
 }
 
 body {
