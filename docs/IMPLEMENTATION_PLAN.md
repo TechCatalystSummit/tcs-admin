@@ -208,6 +208,22 @@ All 12 admin modules ship with mock data, Zustand stores, responsive shell, comm
 
 ---
 
+## Sprint 13 — Luxe Motion ✓
+
+**Goal:** Premium animations and transitions via Motion library.
+
+| Task | Deliverable |
+|---|---|
+| 13.1 | `motion` package + `core/constants/motion.ts` tokens |
+| 13.2 | `PageTransition`, `FadeUp`, `Stagger`, `LuxeCard` primitives |
+| 13.3 | Route fade-up, command palette scale, sheet/dialog slide |
+| 13.4 | Dashboard stagger, KPI hover lift, login hero entrance |
+| 13.5 | Sidebar submenu expand, bulk bar slide, reduced-motion CSS |
+
+**Commit:** `feat: luxe motion and transitions with Motion`
+
+---
+
 ## Per-Sprint Workflow
 2. Run `npx tsc --noEmit && npm run lint && npm run build`
 3. Review against build plan component inventory

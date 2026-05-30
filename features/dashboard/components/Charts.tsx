@@ -1,6 +1,7 @@
 "use client";
 
-import { Card, CardContent, CardHeader } from "@/shared/components/ui/Card";
+import { CardContent, CardHeader } from "@/shared/components/ui/Card";
+import { LuxeCard } from "@/shared/components/motion/LuxeCard";
 import { SectionLabel } from "@/shared/components/ui/SectionLabel";
 import { useDashboardStore } from "../store/useDashboardStore";
 import {
@@ -18,7 +19,7 @@ export function RevenueChart() {
   const data = useDashboardStore((s) => s.revenueData);
 
   return (
-    <Card>
+    <LuxeCard className="bg-white border border-border overflow-hidden">
       <CardHeader>
         <SectionLabel>MRR Trend — 30 Days</SectionLabel>
       </CardHeader>
@@ -41,7 +42,7 @@ export function RevenueChart() {
           </AreaChart>
         </ResponsiveContainer>
       </CardContent>
-    </Card>
+    </LuxeCard>
   );
 }
 
@@ -49,7 +50,7 @@ export function MemberGrowthChart() {
   const data = useDashboardStore((s) => s.growthData);
 
   return (
-    <Card>
+    <LuxeCard className="bg-white border border-border overflow-hidden">
       <CardHeader>
         <SectionLabel>Weekly New Signups</SectionLabel>
       </CardHeader>
@@ -69,6 +70,6 @@ export function MemberGrowthChart() {
           </BarChart>
         </ResponsiveContainer>
       </CardContent>
-    </Card>
+    </LuxeCard>
   );
 }

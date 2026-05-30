@@ -5,7 +5,9 @@ import { navItems } from "@/core/constants/nav";
 import { useAuthStore } from "@/features/auth/store/useAuthStore";
 import { Avatar } from "@/shared/components/ui/Avatar";
 import { Badge } from "@/shared/components/ui/Badge";
+import { transition } from "@/core/constants/motion";
 import { cn } from "@/shared/utils/cn";
+import { AnimatePresence, motion } from "motion/react";
 import { ChevronDown, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -35,7 +37,7 @@ export function AdminSidebar() {
   return (
     <aside
       className={cn(
-        "fixed left-0 top-0 z-40 flex h-screen flex-col bg-sidebar transition-all duration-200",
+        "fixed left-0 top-0 z-40 flex h-screen flex-col bg-sidebar transition-[width,transform] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
         collapsed ? "md:w-16" : "md:w-60",
         "w-60",
         mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0",
@@ -71,7 +73,7 @@ export function AdminSidebar() {
                   href={item.href}
                   onClick={closeMobile}
                   className={cn(
-                    "flex flex-1 items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors",
+                    "flex flex-1 items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors duration-300",
                     active
                       ? "bg-blue-l/10 text-blue-l border-l-2 border-blue1"
                       : "text-hint hover:bg-white/5 hover:text-white border-l-2 border-transparent",
@@ -100,30 +102,38 @@ export function AdminSidebar() {
                 )}
               </div>
 
-              {showLabels && hasChildren && isExpanded && (
-                <div className="ml-4 mt-0.5 space-y-0.5 border-l border-white/10 pl-3">
-                  {item.children!.map((child) => (
-                    <Link
-                      key={child.href}
-                      href={child.href}
-                      onClick={closeMobile}
-                      className={cn(
-                        "flex items-center justify-between rounded-lg px-3 py-2 text-xs transition-colors",
-                        pathname === child.href
-                          ? "text-blue-l bg-blue-l/10"
-                          : "text-hint hover:text-white hover:bg-white/5",
-                      )}
-                    >
-                      {child.label}
-                      {child.badge && (
-                        <Badge variant="stage" className="text-[9px]">
-                          {child.badge}
-                        </Badge>
-                      )}
-                    </Link>
-                  ))}
-                </div>
-              )}
+              <AnimatePresence initial={false}>
+                {showLabels && hasChildren && isExpanded && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={transition.fast}
+                    className="ml-4 mt-0.5 space-y-0.5 border-l border-white/10 pl-3 overflow-hidden"
+                  >
+                    {item.children!.map((child) => (
+                      <Link
+                        key={child.href}
+                        href={child.href}
+                        onClick={closeMobile}
+                        className={cn(
+                          "flex items-center justify-between rounded-lg px-3 py-2 text-xs transition-colors duration-300",
+                          pathname === child.href
+                            ? "text-blue-l bg-blue-l/10"
+                            : "text-hint hover:text-white hover:bg-white/5",
+                        )}
+                      >
+                        {child.label}
+                        {child.badge && (
+                          <Badge variant="stage" className="text-[9px]">
+                            {child.badge}
+                          </Badge>
+                        )}
+                      </Link>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           );
         })}

@@ -1,6 +1,9 @@
 "use client";
 
+import { fadeIn, transition } from "@/core/constants/motion";
+import { PageTransition } from "@/shared/components/motion/PageTransition";
 import { cn } from "@/shared/utils/cn";
+import { AnimatePresence, motion } from "motion/react";
 import { AdminSidebar } from "./AdminSidebar";
 import { AdminTopbar } from "./AdminTopbar";
 import { AuthGuard } from "./AuthGuard";
@@ -13,23 +16,31 @@ function AdminShellInner({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-surf">
-      {mobileOpen && (
-        <button
-          type="button"
-          aria-label="Close navigation menu"
-          className="fixed inset-0 z-30 bg-dark1/60 md:hidden"
-          onClick={closeMobile}
-        />
-      )}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.button
+            type="button"
+            aria-label="Close navigation menu"
+            className="fixed inset-0 z-30 bg-dark1/60 md:hidden"
+            onClick={closeMobile}
+            initial={fadeIn.initial}
+            animate={fadeIn.animate}
+            exit={fadeIn.exit}
+            transition={transition.fast}
+          />
+        )}
+      </AnimatePresence>
       <AdminSidebar />
       <div
         className={cn(
-          "min-h-screen flex flex-col transition-all duration-200",
+          "min-h-screen flex flex-col transition-[margin] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
           collapsed ? "md:ml-16" : "md:ml-60",
         )}
       >
         <AdminTopbar />
-        <main className="flex-1 p-4 md:p-6">{children}</main>
+        <main className="flex-1 p-4 md:p-6">
+          <PageTransition>{children}</PageTransition>
+        </main>
       </div>
       <CommandPalette />
     </div>

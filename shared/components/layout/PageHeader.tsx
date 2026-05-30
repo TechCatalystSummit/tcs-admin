@@ -1,3 +1,6 @@
+"use client";
+
+import { FadeUp } from "@/shared/components/motion/FadeUp";
 import { cn } from "@/shared/utils/cn";
 import { type ReactNode } from "react";
 import { GradientButton } from "@/shared/components/ui/GradientButton";
@@ -12,15 +15,15 @@ interface PageHeaderProps {
 
 export function PageHeader({ title, subtitle, action, actionLabel, onAction }: PageHeaderProps) {
   return (
-    <div className="flex items-start justify-between gap-4 mb-6">
+    <FadeUp className="flex items-start justify-between gap-4 mb-6">
       <div>
-        <h1 className="text-2xl font-bold text-ink">{title}</h1>
+        <h1 className="text-2xl font-bold text-ink tracking-tight">{title}</h1>
         {subtitle && <p className="text-sm text-muted mt-1">{subtitle}</p>}
       </div>
       {action ?? (actionLabel && onAction && (
         <GradientButton onClick={onAction}>{actionLabel}</GradientButton>
       ))}
-    </div>
+    </FadeUp>
   );
 }
 
@@ -38,7 +41,10 @@ export function EmptyState({
   className?: string;
 }) {
   return (
-    <div className={cn("flex flex-col items-center justify-center py-16 text-center", className)}>
+    <FadeUp
+      className={cn("flex flex-col items-center justify-center py-16 text-center", className)}
+      delay={0.08}
+    >
       <p className="text-lg font-semibold text-ink">{title}</p>
       {description && <p className="text-sm text-muted mt-2 max-w-sm">{description}</p>}
       {actionLabel && onAction && (
@@ -46,6 +52,6 @@ export function EmptyState({
           {actionLabel}
         </GradientButton>
       )}
-    </div>
+    </FadeUp>
   );
 }
