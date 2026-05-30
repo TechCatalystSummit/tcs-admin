@@ -2,9 +2,10 @@
 
 import { Avatar } from "@/shared/components/ui/Avatar";
 import { useAuthStore } from "@/features/auth/store/useAuthStore";
-import { Bell, Search } from "lucide-react";
+import { Bell, Menu, Search } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useSidebar } from "./SidebarContext";
 
 function getBreadcrumbs(pathname: string): { label: string; href: string }[] {
   const segments = pathname.split("/").filter(Boolean);
@@ -25,29 +26,41 @@ function getBreadcrumbs(pathname: string): { label: string; href: string }[] {
 export function AdminTopbar() {
   const pathname = usePathname();
   const user = useAuthStore((s) => s.user);
+  const logout = useAuthStore((s) => s.logout);
   const breadcrumbs = getBreadcrumbs(pathname);
+  const { openMobile } = useSidebar();
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-white px-6">
-      <nav className="flex items-center gap-1 text-sm">
-        {breadcrumbs.map((crumb, i) => (
-          <span key={crumb.href} className="flex items-center gap-1">
-            {i > 0 && <span className="text-hint">/</span>}
-            <Link
-              href={crumb.href}
-              className={
-                i === breadcrumbs.length - 1
-                  ? "font-semibold text-ink"
-                  : "text-muted hover:text-ink"
-              }
-            >
-              {crumb.label}
-            </Link>
-          </span>
-        ))}
-      </nav>
+    <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-white px-4 md:px-6">
+      <div className="flex items-center gap-3 min-w-0">
+        <button
+          type="button"
+          onClick={openMobile}
+          className="md:hidden rounded-lg p-2 text-muted hover:bg-surf hover:text-ink"
+          aria-label="Open navigation menu"
+        >
+          <Menu className="h-5 w-5" />
+        </button>
+        <nav className="flex items-center gap-1 text-sm overflow-x-auto">
+          {breadcrumbs.map((crumb, i) => (
+            <span key={crumb.href} className="flex items-center gap-1 shrink-0">
+              {i > 0 && <span className="text-hint">/</span>}
+              <Link
+                href={crumb.href}
+                className={
+                  i === breadcrumbs.length - 1
+                    ? "font-semibold text-ink"
+                    : "text-muted hover:text-ink"
+                }
+              >
+                {crumb.label}
+              </Link>
+            </span>
+          ))}
+        </nav>
+      </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 md:gap-4 shrink-0">
         <div className="relative hidden md:block">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-hint" />
           <input
@@ -63,7 +76,9 @@ export function AdminTopbar() {
           <Bell className="h-4 w-4" />
           <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-orange" />
         </button>
-        <Avatar name={user?.name ?? "Admin"} size="sm" />
+        <button type="button" onClick={logout} className="hidden sm:block">
+          <Avatar name={user?.name ?? "Admin"} size="sm" />
+        </button>
       </div>
     </header>
   );

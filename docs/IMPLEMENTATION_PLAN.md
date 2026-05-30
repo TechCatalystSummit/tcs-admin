@@ -87,6 +87,19 @@ Phased execution aligned with `TCS_Web_Admin_Build_Plan.md` §10 Sprint Order.
 
 ---
 
+## Sprint 6 — UX Polish ✓
+
+| Task | Deliverable |
+|---|---|
+| 6.1 | Responsive admin shell — mobile hamburger, sidebar overlay, collapsed margin sync |
+| 6.2 | `ExportButton` wired to Members, Events, Payments, Intros, Sponsors, Leads |
+| 6.3 | `useDebounce` on member search, auth guard, login redirect |
+| 6.4 | `Skeleton` components, enhanced DataTable empty states |
+
+**Commit:** `feat: responsive shell, csv export, auth guard, and ux polish`
+
+---
+
 ## Per-Sprint Workflow
 
 1. Implement phase deliverables

@@ -7,7 +7,7 @@ function escapeCsvCell(value: unknown): string {
   return str;
 }
 
-export function exportToCsv<T extends Record<string, unknown>>(
+export function exportToCsv<T extends object>(
   data: T[],
   filename: string,
   columns?: CsvColumn<T>[],

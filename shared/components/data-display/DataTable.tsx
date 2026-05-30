@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/shared/utils/cn";
+import { EmptyState } from "@/shared/components/layout/PageHeader";
 import {
   flexRender,
   getCoreRowModel,
@@ -18,12 +19,16 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   pageSize?: number;
+  emptyTitle?: string;
+  emptyDescription?: string;
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
   pageSize = 25,
+  emptyTitle = "No results found",
+  emptyDescription,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
 
@@ -81,11 +86,8 @@ export function DataTable<TData, TValue>({
           <tbody>
             {table.getRowModel().rows.length === 0 ? (
               <tr>
-                <td
-                  colSpan={columns.length}
-                  className="px-4 py-12 text-center text-muted text-sm"
-                >
-                  No results found
+                <td colSpan={columns.length} className="px-4 py-8">
+                  <EmptyState title={emptyTitle} description={emptyDescription} />
                 </td>
               </tr>
             ) : (

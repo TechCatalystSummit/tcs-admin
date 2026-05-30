@@ -1,6 +1,8 @@
 "use client";
 
 import { Input } from "@/shared/components/ui/Input";
+import { useDebounce } from "@/shared/hooks/useDebounce";
+import { useEffect, useState } from "react";
 import { useMembersStore } from "../store/useMembersStore";
 
 const tiers = ["", "community", "builder", "executive", "partner", "legacy"];
@@ -11,14 +13,20 @@ export function MemberFilters() {
   const filters = useMembersStore((s) => s.filters);
   const setFilter = useMembersStore((s) => s.setFilter);
   const clearFilters = useMembersStore((s) => s.clearFilters);
+  const [searchInput, setSearchInput] = useState(filters.search);
+  const debouncedSearch = useDebounce(searchInput, 300);
+
+  useEffect(() => {
+    setFilter("search", debouncedSearch);
+  }, [debouncedSearch, setFilter]);
 
   return (
     <div className="flex flex-wrap items-end gap-3 mb-4">
       <div className="flex-1 min-w-[200px]">
         <Input
           placeholder="Search name, company, email..."
-          value={filters.search}
-          onChange={(e) => setFilter("search", e.target.value)}
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
         />
       </div>
       <select
@@ -53,7 +61,10 @@ export function MemberFilters() {
       </select>
       <button
         type="button"
-        onClick={clearFilters}
+        onClick={() => {
+          clearFilters();
+          setSearchInput("");
+        }}
         className="text-xs text-muted hover:text-ink px-2"
       >
         Clear
