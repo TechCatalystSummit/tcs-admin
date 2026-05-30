@@ -1,5 +1,5 @@
-import { PlaceholderPage } from "@/shared/components/layout/PlaceholderPage";
+import LeadsPage from "@/features/outreach/pages/LeadsPage";
 
-export default function LeadsPage() {
-  return <PlaceholderPage title="Leads / CRM" subtitle="Full CRM contact management" />;
+export default function Page() {
+  return <LeadsPage />;
 }

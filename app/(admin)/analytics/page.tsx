@@ -1,5 +1,5 @@
-import { PlaceholderPage } from "@/shared/components/layout/PlaceholderPage";
+import AnalyticsPage from "@/features/analytics/pages/AnalyticsPage";
 
-export default function AnalyticsPage() {
-  return <PlaceholderPage title="Analytics" subtitle="Platform outcomes and growth metrics" />;
+export default function Page() {
+  return <AnalyticsPage />;
 }

@@ -1,5 +1,5 @@
-import { PlaceholderPage } from "@/shared/components/layout/PlaceholderPage";
+import NotificationsPage from "@/features/notifications/pages/NotificationsPage";
 
-export default function NotificationsPage() {
-  return <PlaceholderPage title="Notifications" subtitle="Send and manage platform notifications" />;
+export default function Page() {
+  return <NotificationsPage />;
 }

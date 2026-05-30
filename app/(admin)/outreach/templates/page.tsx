@@ -1,5 +1,5 @@
-import { PlaceholderPage } from "@/shared/components/layout/PlaceholderPage";
+import TemplatesPage from "@/features/outreach/pages/TemplatesPage";
 
-export default function TemplatesPage() {
-  return <PlaceholderPage title="Email Templates" subtitle="Template library with dynamic variables" />;
+export default function Page() {
+  return <TemplatesPage />;
 }

@@ -1,5 +1,5 @@
-import { PlaceholderPage } from "@/shared/components/layout/PlaceholderPage";
+import OutreachPage from "@/features/outreach/pages/OutreachPage";
 
-export default function OutreachPage() {
-  return <PlaceholderPage title="Outreach Command Center" subtitle="Quick send and outreach stats" />;
+export default function Page() {
+  return <OutreachPage />;
 }

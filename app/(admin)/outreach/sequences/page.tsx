@@ -1,5 +1,5 @@
-import { PlaceholderPage } from "@/shared/components/layout/PlaceholderPage";
+import SequencesPage from "@/features/outreach/pages/SequencesPage";
 
-export default function SequencesPage() {
-  return <PlaceholderPage title="Follow-up Sequences" subtitle="Automated email sequence builder" />;
+export default function Page() {
+  return <SequencesPage />;
 }
