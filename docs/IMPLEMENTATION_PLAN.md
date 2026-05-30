@@ -110,7 +110,20 @@ Phased execution aligned with `TCS_Web_Admin_Build_Plan.md` §10 Sprint Order.
 
 ---
 
-1. Implement phase deliverables
+## Sprint 8 — Shared Infrastructure + Bulk Actions ✓
+
+| Task | Deliverable |
+|---|---|
+| 8.1 | `useLocalStorage`, `useModal`, `useTableFilters` hooks |
+| 8.2 | `FilterBar`, `BulkActionBar` shared components |
+| 8.3 | Members table row selection + bulk approve/export |
+| 8.4 | URL-synced member filters |
+
+**Commit:** `feat: shared hooks, filter bar, and member bulk actions`
+
+---
+
+## Per-Sprint Workflow
 2. Run `npx tsc --noEmit && npm run lint && npm run build`
 3. Review against build plan component inventory
 4. Git commit with conventional message (no tool names)

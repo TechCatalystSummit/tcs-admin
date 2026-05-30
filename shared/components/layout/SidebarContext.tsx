@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, type ReactNode } from "react";
+import { useLocalStorageBoolean } from "@/shared/hooks/useLocalStorage";
 
 const SIDEBAR_KEY = "tcs-sidebar-collapsed";
 
@@ -15,19 +16,10 @@ interface SidebarContextValue {
 const SidebarContext = createContext<SidebarContextValue | null>(null);
 
 export function SidebarProvider({ children }: { children: ReactNode }) {
-  const [collapsed, setCollapsed] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return localStorage.getItem(SIDEBAR_KEY) === "true";
-  });
+  const [collapsed, setCollapsed] = useLocalStorageBoolean(SIDEBAR_KEY, false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const toggleCollapsed = () => {
-    setCollapsed((prev) => {
-      const next = !prev;
-      localStorage.setItem(SIDEBAR_KEY, String(next));
-      return next;
-    });
-  };
+  const toggleCollapsed = () => setCollapsed((prev) => !prev);
 
   return (
     <SidebarContext.Provider

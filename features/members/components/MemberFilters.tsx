@@ -1,13 +1,17 @@
 "use client";
 
+import { FilterBar } from "@/shared/components/layout/FilterBar";
 import { Input } from "@/shared/components/ui/Input";
 import { useDebounce } from "@/shared/hooks/useDebounce";
-import { useEffect, useState } from "react";
+import { useTableFilters } from "@/shared/hooks/useTableFilters";
+import { useEffect, useMemo, useState } from "react";
 import { useMembersStore } from "../store/useMembersStore";
 
 const tiers = ["", "community", "builder", "executive", "partner", "legacy"];
 const roles = ["", "CEO", "CTO", "Founder", "VP Engineering", "Investor", "Product Lead"];
 const statuses = ["", "active", "pending", "suspended"];
+
+const defaultFilters = { tier: "", role: "", status: "", search: "" };
 
 export function MemberFilters() {
   const filters = useMembersStore((s) => s.filters);
@@ -16,12 +20,25 @@ export function MemberFilters() {
   const [searchInput, setSearchInput] = useState(filters.search);
   const debouncedSearch = useDebounce(searchInput, 300);
 
+  useTableFilters(filters, setFilter, defaultFilters);
+
   useEffect(() => {
     setFilter("search", debouncedSearch);
   }, [debouncedSearch, setFilter]);
 
+  const activeCount = useMemo(
+    () => Object.values(filters).filter(Boolean).length,
+    [filters],
+  );
+
   return (
-    <div className="flex flex-wrap items-end gap-3 mb-4">
+    <FilterBar
+      activeCount={activeCount}
+      onClear={() => {
+        clearFilters();
+        setSearchInput("");
+      }}
+    >
       <div className="flex-1 min-w-[200px]">
         <Input
           placeholder="Search name, company, email..."
@@ -59,16 +76,6 @@ export function MemberFilters() {
           <option key={s} value={s}>{s}</option>
         ))}
       </select>
-      <button
-        type="button"
-        onClick={() => {
-          clearFilters();
-          setSearchInput("");
-        }}
-        className="text-xs text-muted hover:text-ink px-2"
-      >
-        Clear
-      </button>
-    </div>
+    </FilterBar>
   );
 }

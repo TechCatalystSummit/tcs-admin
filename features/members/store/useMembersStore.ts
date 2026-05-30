@@ -20,6 +20,7 @@ interface MembersState {
   clearSelection: () => void;
   approveMember: (id: string) => void;
   declineMember: (id: string) => void;
+  bulkApproveMembers: (ids: string[]) => void;
   approveApproval: (id: string) => void;
   declineApproval: (id: string) => void;
   getFilteredMembers: () => AdminMember[];
@@ -58,6 +59,14 @@ export const useMembersStore = create<MembersState>()(
       set((state) => {
         const m = state.members.find((x) => x.id === id);
         if (m) m.status = "declined";
+      }),
+    bulkApproveMembers: (ids) =>
+      set((state) => {
+        for (const id of ids) {
+          const m = state.members.find((x) => x.id === id);
+          if (m) m.status = "active";
+        }
+        state.selectedIds = [];
       }),
     approveApproval: (id) =>
       set((state) => {
