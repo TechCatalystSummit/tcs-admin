@@ -19,8 +19,11 @@ const exportColumns = [
 ];
 
 export default function EventsPage() {
-  const events = useEventsStore((s) => s.getFilteredEvents());
-  const exportData = events.map((e) => ({
+  useEventsStore((s) => s.filters);
+  useEventsStore((s) => s.events);
+  const getFilteredEvents = useEventsStore((s) => s.getFilteredEvents);
+  const filteredEvents = getFilteredEvents();
+  const exportData = filteredEvents.map((e) => ({
     title: e.title,
     date: e.startDate,
     type: e.type,

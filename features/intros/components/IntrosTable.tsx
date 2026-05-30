@@ -11,9 +11,11 @@ import { INTRO_REASON_LABELS, type IntroRequest } from "../types";
 import { IntroStatusBadge } from "./IntroStatusBadge";
 
 export function IntrosTable() {
+  useIntrosStore((s) => s.filters);
+  useIntrosStore((s) => s.intros);
   const getFilteredIntros = useIntrosStore((s) => s.getFilteredIntros);
   const openDetail = useIntrosStore((s) => s.openDetail);
-  const intros = getFilteredIntros();
+  const filteredIntros = getFilteredIntros();
 
   const columns = useMemo<ColumnDef<IntroRequest>[]>(
     () => [
@@ -90,5 +92,5 @@ export function IntrosTable() {
     [openDetail],
   );
 
-  return <DataTable columns={columns} data={intros} />;
+  return <DataTable columns={columns} data={filteredIntros} />;
 }

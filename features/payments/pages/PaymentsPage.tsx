@@ -19,8 +19,11 @@ const exportColumns = [
 ];
 
 export default function PaymentsPage() {
-  const payments = usePaymentsStore((s) => s.getFilteredPayments());
-  const exportData = payments.map((p) => ({
+  usePaymentsStore((s) => s.filters);
+  usePaymentsStore((s) => s.payments);
+  const getFilteredPayments = usePaymentsStore((s) => s.getFilteredPayments);
+  const filteredPayments = getFilteredPayments();
+  const exportData = filteredPayments.map((p) => ({
     memberName: p.memberName,
     amount: p.amount,
     tier: p.tier,

@@ -6,8 +6,10 @@ import { ApprovalFilterTabs } from "../components/ApprovalFilterTabs";
 import { useMembersStore } from "../store/useMembersStore";
 
 export default function ApprovalsPage() {
+  useMembersStore((s) => s.approvalTab);
+  useMembersStore((s) => s.approvals);
   const getFilteredApprovals = useMembersStore((s) => s.getFilteredApprovals);
-  const approvals = getFilteredApprovals();
+  const filteredApprovals = getFilteredApprovals();
 
   return (
     <>
@@ -19,7 +21,7 @@ export default function ApprovalsPage() {
         <ApprovalFilterTabs />
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-        {approvals.map((approval) => (
+        {filteredApprovals.map((approval) => (
           <ApprovalCard key={approval.id} approval={approval} />
         ))}
       </div>

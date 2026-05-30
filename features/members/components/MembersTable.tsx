@@ -33,6 +33,8 @@ const exportColumns = [
 ];
 
 export function MembersTable() {
+  useMembersStore((s) => s.filters);
+  useMembersStore((s) => s.members);
   const getFilteredMembers = useMembersStore((s) => s.getFilteredMembers);
   const selectedIds = useMembersStore((s) => s.selectedIds);
   const toggleSelect = useMembersStore((s) => s.toggleSelect);
@@ -40,10 +42,10 @@ export function MembersTable() {
   const clearSelection = useMembersStore((s) => s.clearSelection);
   const bulkApproveMembers = useMembersStore((s) => s.bulkApproveMembers);
   const openMemberSheet = useMembersStore((s) => s.openMemberSheet);
-  const members = getFilteredMembers();
+  const filteredMembers = getFilteredMembers();
 
-  const selectedMembers = members.filter((m) => selectedIds.includes(m.id));
-  const allSelected = selectedIds.length === members.length && members.length > 0;
+  const selectedMembers = filteredMembers.filter((m) => selectedIds.includes(m.id));
+  const allSelected = selectedIds.length === filteredMembers.length && filteredMembers.length > 0;
 
   const columns = useMemo<ColumnDef<AdminMember>[]>(
     () => [
@@ -53,7 +55,7 @@ export function MembersTable() {
           <Checkbox
             checked={allSelected}
             onCheckedChange={(checked) => {
-              if (checked) selectAll(members.map((m) => m.id));
+              if (checked) selectAll(filteredMembers.map((m) => m.id));
               else clearSelection();
             }}
             aria-label="Select all members"
@@ -137,7 +139,7 @@ export function MembersTable() {
         enableSorting: false,
       },
     ],
-    [members, selectedIds, allSelected, selectAll, clearSelection, toggleSelect, openMemberSheet, bulkApproveMembers],
+    [filteredMembers, selectedIds, allSelected, selectAll, clearSelection, toggleSelect, openMemberSheet, bulkApproveMembers],
   );
 
   return (
@@ -162,7 +164,7 @@ export function MembersTable() {
       </BulkActionBar>
       <DataTable
         columns={columns}
-        data={members}
+        data={filteredMembers}
         emptyTitle="No members found"
         emptyDescription="Try adjusting your filters or search query."
       />

@@ -17,8 +17,11 @@ const exportColumns = [
 ];
 
 export default function SponsorsPage() {
-  const sponsors = useSponsorsStore((s) => s.getFilteredSponsors());
-  const exportData = sponsors.map((s) => ({
+  useSponsorsStore((s) => s.filters);
+  useSponsorsStore((s) => s.sponsors);
+  const getFilteredSponsors = useSponsorsStore((s) => s.getFilteredSponsors);
+  const filteredSponsors = getFilteredSponsors();
+  const exportData = filteredSponsors.map((s) => ({
     name: s.name,
     tier: s.tier,
     eventsCount: s.eventsSponsored.length,

@@ -11,8 +11,10 @@ import type { Sponsor } from "../types";
 import { SponsorStatusBadge, SponsorTierBadge } from "./SponsorStatusBadge";
 
 export function SponsorsTable() {
+  useSponsorsStore((s) => s.filters);
+  useSponsorsStore((s) => s.sponsors);
   const getFilteredSponsors = useSponsorsStore((s) => s.getFilteredSponsors);
-  const sponsors = getFilteredSponsors();
+  const filteredSponsors = getFilteredSponsors();
 
   const columns = useMemo<ColumnDef<Sponsor>[]>(
     () => [
@@ -60,5 +62,5 @@ export function SponsorsTable() {
     [],
   );
 
-  return <DataTable columns={columns} data={sponsors} />;
+  return <DataTable columns={columns} data={filteredSponsors} />;
 }

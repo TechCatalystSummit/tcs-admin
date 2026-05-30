@@ -22,7 +22,10 @@ const exportColumns = [
 
 export default function LeadsPage() {
   const openAddLeadModal = useOutreachStore((s) => s.openAddLeadModal);
-  const leads = useOutreachStore((s) => s.getFilteredLeads());
+  useOutreachStore((s) => s.filters);
+  useOutreachStore((s) => s.leads);
+  const getFilteredLeads = useOutreachStore((s) => s.getFilteredLeads);
+  const filteredLeads = getFilteredLeads();
 
   return (
     <>
@@ -31,7 +34,7 @@ export default function LeadsPage() {
         subtitle="Full CRM contact management"
         action={
           <div className="flex items-center gap-2">
-            <ExportButton data={leads} filename="tcs-leads" columns={exportColumns} />
+            <ExportButton data={filteredLeads} filename="tcs-leads" columns={exportColumns} />
             <button
               type="button"
               onClick={openAddLeadModal}

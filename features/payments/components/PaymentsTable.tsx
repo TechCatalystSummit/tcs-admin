@@ -11,9 +11,11 @@ import type { Payment } from "../types";
 import { PaymentStatusBadge } from "./PaymentStatusBadge";
 
 export function PaymentsTable() {
+  usePaymentsStore((s) => s.filters);
+  usePaymentsStore((s) => s.payments);
   const getFilteredPayments = usePaymentsStore((s) => s.getFilteredPayments);
   const openRefund = usePaymentsStore((s) => s.openRefund);
-  const payments = getFilteredPayments();
+  const filteredPayments = getFilteredPayments();
 
   const columns = useMemo<ColumnDef<Payment>[]>(
     () => [
@@ -86,5 +88,5 @@ export function PaymentsTable() {
     [openRefund],
   );
 
-  return <DataTable columns={columns} data={payments} />;
+  return <DataTable columns={columns} data={filteredPayments} />;
 }

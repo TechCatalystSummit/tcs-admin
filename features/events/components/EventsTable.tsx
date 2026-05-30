@@ -11,8 +11,10 @@ import type { Event } from "../types";
 import { EventStatusBadge } from "./EventStatusBadge";
 
 export function EventsTable() {
+  useEventsStore((s) => s.filters);
+  useEventsStore((s) => s.events);
   const getFilteredEvents = useEventsStore((s) => s.getFilteredEvents);
-  const events = getFilteredEvents();
+  const filteredEvents = getFilteredEvents();
 
   const columns = useMemo<ColumnDef<Event>[]>(
     () => [
@@ -80,5 +82,5 @@ export function EventsTable() {
     [],
   );
 
-  return <DataTable columns={columns} data={events} />;
+  return <DataTable columns={columns} data={filteredEvents} />;
 }

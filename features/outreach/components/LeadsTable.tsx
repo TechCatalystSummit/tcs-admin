@@ -24,6 +24,8 @@ const exportColumns = [
 ];
 
 export function LeadsTable() {
+  useOutreachStore((s) => s.filters);
+  useOutreachStore((s) => s.leads);
   const getFilteredLeads = useOutreachStore((s) => s.getFilteredLeads);
   const openLeadDetail = useOutreachStore((s) => s.openLeadDetail);
   const selectedLeadIds = useOutreachStore((s) => s.selectedLeadIds);
@@ -31,9 +33,9 @@ export function LeadsTable() {
   const selectAllLeads = useOutreachStore((s) => s.selectAllLeads);
   const clearLeadSelection = useOutreachStore((s) => s.clearLeadSelection);
   const deleteLeads = useOutreachStore((s) => s.deleteLeads);
-  const leads = getFilteredLeads();
-  const selectedLeads = leads.filter((l) => selectedLeadIds.includes(l.id));
-  const allSelected = selectedLeadIds.length === leads.length && leads.length > 0;
+  const filteredLeads = getFilteredLeads();
+  const selectedLeads = filteredLeads.filter((l) => selectedLeadIds.includes(l.id));
+  const allSelected = selectedLeadIds.length === filteredLeads.length && filteredLeads.length > 0;
 
   const columns: ColumnDef<Lead>[] = [
       {
@@ -42,7 +44,7 @@ export function LeadsTable() {
           <Checkbox
             checked={allSelected}
             onCheckedChange={(checked) => {
-              if (checked) selectAllLeads(leads.map((l) => l.id));
+              if (checked) selectAllLeads(filteredLeads.map((l) => l.id));
               else clearLeadSelection();
             }}
             aria-label="Select all leads"
@@ -133,7 +135,7 @@ export function LeadsTable() {
           Delete
         </Button>
       </BulkActionBar>
-      <DataTable columns={columns} data={leads} />
+      <DataTable columns={columns} data={filteredLeads} />
     </>
   );
 }

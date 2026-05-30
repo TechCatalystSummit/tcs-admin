@@ -19,8 +19,10 @@ const exportColumns = [
 ];
 
 export default function MembersPage() {
+  useMembersStore((s) => s.filters);
+  useMembersStore((s) => s.members);
   const getFilteredMembers = useMembersStore((s) => s.getFilteredMembers);
-  const members = getFilteredMembers();
+  const filteredMembers = getFilteredMembers();
 
   return (
     <>
@@ -29,7 +31,7 @@ export default function MembersPage() {
         subtitle="Manage all platform members"
         action={
           <ExportButton
-            data={members}
+            data={filteredMembers}
             filename="tcs-members"
             columns={exportColumns}
           />

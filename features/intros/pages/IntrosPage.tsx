@@ -20,8 +20,11 @@ const exportColumns = [
 
 export default function IntrosPage() {
   const openCreateModal = useIntrosStore((s) => s.openCreateModal);
-  const intros = useIntrosStore((s) => s.getFilteredIntros());
-  const exportData = intros.map((i) => ({
+  useIntrosStore((s) => s.filters);
+  useIntrosStore((s) => s.intros);
+  const getFilteredIntros = useIntrosStore((s) => s.getFilteredIntros);
+  const filteredIntros = getFilteredIntros();
+  const exportData = filteredIntros.map((i) => ({
     fromMemberName: i.fromMember.name,
     toMemberName: i.toMember.name,
     reason: i.reason,
