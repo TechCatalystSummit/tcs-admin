@@ -1,26 +1,45 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-ink: #0d0d1a;
+  --color-ink2: #444455;
+  --color-muted: #888899;
+  --color-hint: #bbbbc5;
+  --color-border: #e8e8eb;
+  --color-surf: #f7f7f9;
+  --color-blue1: #1a73e8;
+  --color-blue2: #0dcaf0;
+  --color-blue-l: #eef3ff;
+  --color-gold: #d0a84a;
+  --color-gold-l: #fff9eb;
+  --color-green: #0d9e75;
+  --color-green-l: #f0fff8;
+  --color-dark1: #05112a;
+  --color-dark2: #0a2050;
+  --color-sidebar: #05112a;
+  --color-red: #dc3230;
+  --color-red-l: #feeded;
+  --color-orange: #f37d18;
+  --color-orange-l: #fff3e8;
+  --color-purple: #6b3ac9;
+  --color-purple-l: #f3effe;
+  --font-sans: var(--font-dm-sans);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+@utility bg-brand-gradient {
+  background-image: linear-gradient(to right, #1a73e8, #0dcaf0);
+}
+
+@utility bg-dark-gradient {
+  background-image: linear-gradient(to right, #05112a, #0a2050);
+}
+
+@utility bg-gold-gradient {
+  background-image: linear-gradient(to bottom, #d0a84a, #e8c46a);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-surf);
+  color: var(--color-ink);
+  font-family: var(--font-dm-sans), sans-serif;
 }
