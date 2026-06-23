@@ -31,9 +31,10 @@ type EventFormValues = z.infer<typeof eventFormSchema>;
 interface EventFormProps {
   onSubmit: (data: EventFormData) => void;
   onCancel?: () => void;
+  isSubmitting?: boolean;
 }
 
-export function EventForm({ onSubmit, onCancel }: EventFormProps) {
+export function EventForm({ onSubmit, onCancel, isSubmitting }: EventFormProps) {
   const [speakers, setSpeakers] = useState<Speaker[]>([]);
   const [agenda, setAgenda] = useState<AgendaItem[]>([]);
 
@@ -145,7 +146,9 @@ export function EventForm({ onSubmit, onCancel }: EventFormProps) {
             Cancel
           </Button>
         )}
-        <GradientButton type="submit">Create Event</GradientButton>
+        <GradientButton type="submit" disabled={isSubmitting}>
+          {isSubmitting ? "Creating…" : "Create Event"}
+        </GradientButton>
       </div>
     </form>
   );

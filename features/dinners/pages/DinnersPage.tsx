@@ -1,9 +1,9 @@
 "use client";
 
 import { ExportButton } from "@/shared/components/data-display/ExportButton";
+import { QueryBoundary } from "@/shared/components/data-display/QueryBoundary";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 import { SectionLabel } from "@/shared/components/ui/SectionLabel";
-import { Spinner } from "@/shared/components/ui/SectionLabel";
 import { useDinnersList } from "../api/queries";
 import { AdjustCreditsModal } from "../components/AdjustCreditsModal";
 import { CreditLedger } from "../components/CreditLedger";
@@ -21,7 +21,7 @@ const exportColumns = [
 ];
 
 export default function DinnersPage() {
-  const { data, isLoading } = useDinnersList();
+  const { data, isLoading, isError, error, refetch } = useDinnersList();
   const requests = data?.requests ?? [];
   const exportData = requests.map((r) => ({
     requesterName: r.requesterName,
@@ -45,13 +45,17 @@ export default function DinnersPage() {
       <div className="space-y-10">
         <section className="space-y-4">
           <SectionLabel>Dinner requests</SectionLabel>
-          {isLoading ? (
-            <div className="flex justify-center py-12">
-              <Spinner className="h-8 w-8" />
-            </div>
-          ) : (
+          <QueryBoundary
+            isLoading={isLoading}
+            isError={isError}
+            error={error}
+            onRetry={() => void refetch()}
+            isEmpty={!isLoading && !isError && requests.length === 0}
+            emptyTitle="No dinner requests"
+            emptyDescription="Executive dinner requests will appear here."
+          >
             <DinnersTable requests={requests} />
-          )}
+          </QueryBoundary>
         </section>
         <section className="space-y-4">
           <SectionLabel>Credit ledger</SectionLabel>

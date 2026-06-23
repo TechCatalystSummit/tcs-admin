@@ -75,4 +75,36 @@ describe("apiFetch", () => {
       }),
     );
   });
+
+  it("returns empty data for 204 No Content", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(new Response(null, { status: 204 }));
+
+    const result = await apiFetch<null>("/api/resource", { token: "t" });
+    expect(result.data).toBeUndefined();
+  });
+
+  it("throws ApiError on 403", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          success: false,
+          error: { code: "FORBIDDEN", message: "Forbidden" },
+        }),
+        { status: 403, headers: { "Content-Type": "application/json" } },
+      ),
+    );
+
+    await expect(apiFetch("/api/admin", { token: "t" })).rejects.toMatchObject({
+      status: 403,
+      code: "FORBIDDEN",
+    });
+  });
+
+  it("throws on invalid JSON body", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      new Response("not json", { status: 200, headers: { "Content-Type": "application/json" } }),
+    );
+
+    await expect(apiFetch("/api/me", { token: "t" })).rejects.toThrow();
+  });
 });

@@ -5,7 +5,7 @@ import { useAdminEvents } from "../api/queries";
 import { useEventsStore } from "../store/useEventsStore";
 
 export function useFilteredEvents() {
-  const { data, isLoading, error } = useAdminEvents();
+  const { data, isLoading, isError, error, refetch } = useAdminEvents();
   const filterEvents = useEventsStore((s) => s.filterEvents);
   const filters = useEventsStore((s) => s.filters);
 
@@ -14,5 +14,5 @@ export function useFilteredEvents() {
     [data?.events, filterEvents, filters],
   );
 
-  return { events, isLoading, error, meta: data?.meta };
+  return { events, isLoading, isError, error, refetch, meta: data?.meta };
 }

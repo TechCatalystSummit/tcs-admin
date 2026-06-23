@@ -1,9 +1,9 @@
 "use client";
 
 import { ExportButton } from "@/shared/components/data-display/ExportButton";
+import { QueryBoundary } from "@/shared/components/data-display/QueryBoundary";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 import { SectionLabel } from "@/shared/components/ui/SectionLabel";
-import { Spinner } from "@/shared/components/ui/SectionLabel";
 import { GenerateQRModal } from "../components/GenerateQRModal";
 import { OpenGenerateButton } from "../components/OpenGenerateButton";
 import { QRAnalyticsChart } from "../components/QRAnalyticsChart";
@@ -24,7 +24,7 @@ const exportColumns = [
 ];
 
 export default function QRCodesPage() {
-  const { data, isLoading } = useQRCodesList();
+  const { data, isLoading, isError, error, refetch } = useQRCodesList();
   const codes = data?.codes ?? [];
   const exportData = codes.map((c) => ({
     name: c.name,
@@ -49,11 +49,15 @@ export default function QRCodesPage() {
         }
       />
 
-      {isLoading ? (
-        <div className="flex justify-center py-12">
-          <Spinner className="h-8 w-8" />
-        </div>
-      ) : (
+      <QueryBoundary
+        isLoading={isLoading}
+        isError={isError}
+        error={error}
+        onRetry={() => void refetch()}
+        isEmpty={!isLoading && !isError && codes.length === 0}
+        emptyTitle="No QR codes yet"
+        emptyDescription="Generate a QR code to start tracking scans."
+      >
         <>
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
             <div className="xl:col-span-2">
@@ -69,7 +73,7 @@ export default function QRCodesPage() {
             <ScanLogPanel codes={codes} />
           </div>
         </>
-      )}
+      </QueryBoundary>
 
       <GenerateQRModal />
     </>

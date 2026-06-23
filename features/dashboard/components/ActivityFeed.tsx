@@ -1,5 +1,6 @@
 "use client";
 
+import { QueryErrorState } from "@/shared/components/data-display/QueryErrorState";
 import { Card, CardContent, CardHeader } from "@/shared/components/ui/Card";
 import { SectionLabel } from "@/shared/components/ui/SectionLabel";
 import { useDashboardData } from "../api/queries";
@@ -12,7 +13,7 @@ const dotColors = {
 };
 
 export function ActivityFeed() {
-  const { activity, isLoading } = useDashboardData();
+  const { activity, isLoading, isError, error, refetchAll } = useDashboardData();
 
   return (
     <Card className="h-full">
@@ -21,7 +22,11 @@ export function ActivityFeed() {
       </CardHeader>
       <CardContent>
         <ul className="space-y-4 max-h-[320px] overflow-y-auto">
-          {isLoading ? (
+          {isError ? (
+            <li>
+              <QueryErrorState error={error} onRetry={refetchAll} title="Couldn't load activity" />
+            </li>
+          ) : isLoading ? (
             <li className="text-sm text-muted">Loading activity…</li>
           ) : activity.length === 0 ? (
             <li className="text-sm text-muted">No recent activity yet.</li>

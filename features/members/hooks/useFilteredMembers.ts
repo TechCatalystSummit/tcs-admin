@@ -5,7 +5,7 @@ import { useMembersList } from "../api/queries";
 import { useMembersStore } from "../store/useMembersStore";
 
 export function useFilteredMembers() {
-  const { data, isLoading, error } = useMembersList();
+  const { data, isLoading, isError, error, refetch } = useMembersList();
   const filterMembers = useMembersStore((s) => s.filterMembers);
   const filters = useMembersStore((s) => s.filters);
 
@@ -14,5 +14,5 @@ export function useFilteredMembers() {
     [data?.members, filterMembers, filters],
   );
 
-  return { members, isLoading, error, meta: data?.meta };
+  return { members, isLoading, isError, error, refetch, meta: data?.meta };
 }

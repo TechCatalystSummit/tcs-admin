@@ -41,6 +41,8 @@ npm run dev      # development server
 npm run build    # production build
 npm run start    # serve production build
 npm run lint     # ESLint
+npm test         # vitest (unit + hook tests with MSW)
+npm run test:e2e # Playwright (requires .env + tcs-api; first run: npx playwright install)
 npx tsc --noEmit # type check
 ```
 

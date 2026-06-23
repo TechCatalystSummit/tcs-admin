@@ -1,5 +1,6 @@
 "use client";
 
+import { QueryErrorState } from "@/shared/components/data-display/QueryErrorState";
 import { Avatar } from "@/shared/components/ui/Avatar";
 import { Badge } from "@/shared/components/ui/Badge";
 import { Button } from "@/shared/components/ui/Button";
@@ -17,14 +18,22 @@ export function MemberProfilePanel({
   memberId: string;
   onEdit?: () => void;
 }) {
-  const { data: member, isLoading } = useMember(memberId);
+  const { data: member, isLoading, isError, error, refetch } = useMember(memberId);
 
   if (isLoading) {
-    return <Spinner className="h-6 w-6" />;
+    return (
+      <div className="flex justify-center py-8">
+        <Spinner className="h-6 w-6" />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return <QueryErrorState error={error} onRetry={() => void refetch()} />;
   }
 
   if (!member) {
-    return <p className="text-muted">Member not found</p>;
+    return <p className="text-muted">Member not found.</p>;
   }
 
   return (

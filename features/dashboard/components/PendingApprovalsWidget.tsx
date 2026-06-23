@@ -10,7 +10,14 @@ import { formatTier } from "@/shared/utils/formatters";
 import Link from "next/link";
 
 export function PendingApprovalsWidget() {
-  const { pendingApprovals, isLoading, approvePending, declinePending } = useDashboardData();
+  const {
+    pendingApprovals,
+    isLoading,
+    isError,
+    isMutating,
+    approvePending,
+    declinePending,
+  } = useDashboardData();
 
   return (
     <Card>
@@ -23,6 +30,10 @@ export function PendingApprovalsWidget() {
       <CardContent className="space-y-3">
         {isLoading ? (
           <Spinner className="h-6 w-6" />
+        ) : isError ? (
+          <p className="text-sm text-muted">Could not load approvals.</p>
+        ) : pendingApprovals.length === 0 ? (
+          <p className="text-sm text-muted">No pending approvals right now.</p>
         ) : (
           pendingApprovals.map((item) => (
             <div key={item.id} className="flex items-center justify-between gap-3 py-2 border-b border-border last:border-0">
@@ -32,10 +43,20 @@ export function PendingApprovalsWidget() {
                 <Badge variant="tier" className="mt-1">{formatTier(item.tier)}</Badge>
               </div>
               <div className="flex gap-1 shrink-0">
-                <Button size="sm" variant="outline" onClick={() => approvePending(item.id)}>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={isMutating}
+                  onClick={() => approvePending(item.id)}
+                >
                   Approve
                 </Button>
-                <Button size="sm" variant="ghost" onClick={() => declinePending(item.id)}>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  disabled={isMutating}
+                  onClick={() => declinePending(item.id)}
+                >
                   Decline
                 </Button>
               </div>

@@ -5,7 +5,7 @@ import { useSponsorsList } from "../api/queries";
 import { useSponsorsStore } from "../store/useSponsorsStore";
 
 export function useFilteredSponsors() {
-  const { data, isLoading, error } = useSponsorsList();
+  const { data, isLoading, isError, error, refetch } = useSponsorsList();
   const filterSponsors = useSponsorsStore((s) => s.filterSponsors);
   const filters = useSponsorsStore((s) => s.filters);
 
@@ -14,5 +14,5 @@ export function useFilteredSponsors() {
     [data?.sponsors, filterSponsors, filters],
   );
 
-  return { sponsors, isLoading, error, meta: data?.meta };
+  return { sponsors, isLoading, isError, error, refetch, meta: data?.meta };
 }

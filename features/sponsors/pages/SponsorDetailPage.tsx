@@ -1,5 +1,6 @@
 "use client";
 
+import { QueryErrorState } from "@/shared/components/data-display/QueryErrorState";
 import { EmptyState, PageHeader } from "@/shared/components/layout/PageHeader";
 import { Button } from "@/shared/components/ui/Button";
 import { Card, CardContent, CardHeader } from "@/shared/components/ui/Card";
@@ -18,8 +19,14 @@ import { SponsorStatusBadge, SponsorTierBadge } from "../components/SponsorStatu
 export default function SponsorDetailPage({ sponsorId }: { sponsorId: string }) {
   const router = useRouter();
   const [editOpen, setEditOpen] = useState(false);
-  const { data: sponsor, isLoading } = useSponsor(sponsorId);
-  const { data: offers = [] } = useSponsorOffers(sponsorId);
+  const { data: sponsor, isLoading, isError, error, refetch } = useSponsor(sponsorId);
+  const {
+    data: offers = [],
+    isLoading: offersLoading,
+    isError: offersError,
+    error: offersErr,
+    refetch: refetchOffers,
+  } = useSponsorOffers(sponsorId);
   const deleteSponsor = useDeleteSponsor();
 
   if (isLoading) {
@@ -27,6 +34,15 @@ export default function SponsorDetailPage({ sponsorId }: { sponsorId: string }) 
       <div className="flex justify-center py-12">
         <Spinner className="h-8 w-8" />
       </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <>
+        <PageHeader title="Sponsor" subtitle="Could not load sponsor" />
+        <QueryErrorState error={error} onRetry={() => void refetch()} />
+      </>
     );
   }
 
@@ -100,7 +116,18 @@ export default function SponsorDetailPage({ sponsorId }: { sponsorId: string }) 
       </div>
 
       <SectionLabel className="mb-3">Offers</SectionLabel>
-      {offers.length === 0 ? (
+      {offersLoading ? (
+        <div className="flex justify-center py-4 mb-6">
+          <Spinner className="h-5 w-5" />
+        </div>
+      ) : offersError ? (
+        <QueryErrorState
+          error={offersErr}
+          onRetry={() => void refetchOffers()}
+          title="Couldn't load offers"
+          className="mb-6"
+        />
+      ) : offers.length === 0 ? (
         <p className="text-sm text-muted mb-6">No active offers for this sponsor.</p>
       ) : (
         <ul className="mb-6 space-y-2">

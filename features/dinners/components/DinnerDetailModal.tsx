@@ -49,6 +49,7 @@ export function DinnerDetailModal({ requests }: { requests: DinnerRequest[] }) {
             {request.status === "requested" && (
               <Button
                 size="sm"
+                disabled={updateDinner.isPending}
                 onClick={() => updateDinner.mutate({ id: request.id, body: { status: "approved" } })}
               >
                 Approve
@@ -57,6 +58,7 @@ export function DinnerDetailModal({ requests }: { requests: DinnerRequest[] }) {
             {request.status === "approved" && (
               <Button
                 size="sm"
+                disabled={updateDinner.isPending}
                 onClick={() =>
                   updateDinner.mutate({
                     id: request.id,
@@ -78,7 +80,7 @@ export function DinnerDetailModal({ requests }: { requests: DinnerRequest[] }) {
           <Button
             size="sm"
             variant="outline"
-            disabled={!noteDraft.trim()}
+            disabled={!noteDraft.trim() || updateDinner.isPending}
             onClick={() => {
               updateDinner.mutate({ id: request.id, body: { adminNote: noteDraft.trim() } });
               setNoteDraft("");

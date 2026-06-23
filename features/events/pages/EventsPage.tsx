@@ -1,9 +1,9 @@
 "use client";
 
 import { ExportButton } from "@/shared/components/data-display/ExportButton";
+import { QueryBoundary } from "@/shared/components/data-display/QueryBoundary";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 import { GradientButton } from "@/shared/components/ui/GradientButton";
-import { Spinner } from "@/shared/components/ui/SectionLabel";
 import Link from "next/link";
 import { EventFilters } from "../components/EventFilters";
 import { EventsTable } from "../components/EventsTable";
@@ -20,7 +20,7 @@ const exportColumns = [
 ];
 
 export default function EventsPage() {
-  const { events, isLoading } = useFilteredEvents();
+  const { events, isLoading, isError, error, refetch } = useFilteredEvents();
   const exportData = events.map((e) => ({
     title: e.title,
     date: e.startDate,
@@ -46,13 +46,21 @@ export default function EventsPage() {
         }
       />
       <EventFilters />
-      {isLoading ? (
-        <div className="flex justify-center py-12">
-          <Spinner className="h-8 w-8" />
-        </div>
-      ) : (
+      <QueryBoundary
+        isLoading={isLoading}
+        isError={isError}
+        error={error}
+        onRetry={() => void refetch()}
+        isEmpty={!isLoading && !isError && events.length === 0}
+        emptyTitle="No events found"
+        emptyDescription="Create an event or adjust your filters."
+        emptyActionLabel="Create event"
+        onEmptyAction={() => {
+          window.location.href = "/events/new";
+        }}
+      >
         <EventsTable />
-      )}
+      </QueryBoundary>
     </>
   );
 }

@@ -1,9 +1,9 @@
 "use client";
 
 import { ExportButton } from "@/shared/components/data-display/ExportButton";
+import { QueryBoundary } from "@/shared/components/data-display/QueryBoundary";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 import { GradientButton } from "@/shared/components/ui/GradientButton";
-import { Spinner } from "@/shared/components/ui/SectionLabel";
 import { CreateIntroModal } from "../components/CreateIntroModal";
 import { IntroDetailModal } from "../components/IntroDetailModal";
 import { IntroFilters } from "../components/IntroFilters";
@@ -22,7 +22,7 @@ const exportColumns = [
 
 export default function IntrosPage() {
   const openCreateModal = useIntrosStore((s) => s.openCreateModal);
-  const { intros, isLoading } = useFilteredIntros();
+  const { intros, isLoading, isError, error, refetch } = useFilteredIntros();
   const exportData = intros.map((i) => ({
     fromMemberName: i.fromMember.name,
     toMemberName: i.toMember.name,
@@ -45,13 +45,17 @@ export default function IntrosPage() {
         }
       />
       <IntroFilters />
-      {isLoading ? (
-        <div className="flex justify-center py-12">
-          <Spinner className="h-8 w-8" />
-        </div>
-      ) : (
+      <QueryBoundary
+        isLoading={isLoading}
+        isError={isError}
+        error={error}
+        onRetry={() => void refetch()}
+        isEmpty={!isLoading && !isError && intros.length === 0}
+        emptyTitle="No intro requests"
+        emptyDescription="Create an intro or adjust your filters."
+      >
         <IntrosTable />
-      )}
+      </QueryBoundary>
       <IntroDetailModal />
       <CreateIntroModal />
     </>

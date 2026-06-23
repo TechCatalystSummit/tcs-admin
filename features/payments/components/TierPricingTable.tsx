@@ -1,5 +1,6 @@
 "use client";
 
+import { QueryErrorState } from "@/shared/components/data-display/QueryErrorState";
 import { Card, CardContent, CardHeader } from "@/shared/components/ui/Card";
 import { SectionLabel } from "@/shared/components/ui/SectionLabel";
 import { Spinner } from "@/shared/components/ui/SectionLabel";
@@ -10,6 +11,7 @@ export function TierPricingTable() {
   const { data, isLoading } = useMembershipTiers();
   const rows = data?.rows ?? [];
   const fromApi = data?.fromApi ?? false;
+  const apiFailed = data?.apiFailed ?? false;
 
   return (
     <Card>
@@ -17,6 +19,15 @@ export function TierPricingTable() {
         <SectionLabel>Membership tiers & pricing</SectionLabel>
       </CardHeader>
       <CardContent>
+        {apiFailed ? (
+          <div className="mb-4">
+            <QueryErrorState
+              error={data?.error}
+              title="Couldn't load live tier pricing"
+            />
+            <p className="text-xs text-hint mt-2 text-center">Showing local tier defaults below.</p>
+          </div>
+        ) : null}
         {isLoading ? (
           <div className="flex justify-center py-8">
             <Spinner className="h-6 w-6" />

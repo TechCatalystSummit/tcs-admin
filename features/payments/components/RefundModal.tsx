@@ -77,8 +77,8 @@ export function RefundModal({ payments }: { payments: Payment[] }) {
                 Refund processing via Stripe is not yet wired in the admin UI.
               </p>
               <div className="flex gap-2 pt-2">
-                <Button type="submit" variant="danger" size="sm" disabled={!reason.trim()}>
-                  Confirm refund
+                <Button type="submit" variant="danger" size="sm" disabled>
+                  Refunds not available via API
                 </Button>
                 <Button type="button" variant="ghost" size="sm" onClick={closeRefund}>
                   Cancel

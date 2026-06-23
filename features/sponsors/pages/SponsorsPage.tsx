@@ -1,9 +1,9 @@
 "use client";
 
 import { ExportButton } from "@/shared/components/data-display/ExportButton";
+import { QueryBoundary } from "@/shared/components/data-display/QueryBoundary";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 import { GradientButton } from "@/shared/components/ui/GradientButton";
-import { Spinner } from "@/shared/components/ui/SectionLabel";
 import { useState } from "react";
 import { SponsorFilters } from "../components/SponsorFilters";
 import { SponsorFormModal } from "../components/SponsorFormModal";
@@ -21,7 +21,7 @@ const exportColumns = [
 
 export default function SponsorsPage() {
   const [createOpen, setCreateOpen] = useState(false);
-  const { sponsors, isLoading } = useFilteredSponsors();
+  const { sponsors, isLoading, isError, error, refetch } = useFilteredSponsors();
   const exportData = sponsors.map((s) => ({
     name: s.name,
     tier: s.tier,
@@ -44,13 +44,19 @@ export default function SponsorsPage() {
         }
       />
       <SponsorFilters />
-      {isLoading ? (
-        <div className="flex justify-center py-12">
-          <Spinner className="h-8 w-8" />
-        </div>
-      ) : (
+      <QueryBoundary
+        isLoading={isLoading}
+        isError={isError}
+        error={error}
+        onRetry={() => void refetch()}
+        isEmpty={!isLoading && !isError && sponsors.length === 0}
+        emptyTitle="No sponsors found"
+        emptyDescription="Add a sponsor or adjust your filters."
+        emptyActionLabel="Add sponsor"
+        onEmptyAction={() => setCreateOpen(true)}
+      >
         <SponsorsTable />
-      )}
+      </QueryBoundary>
       <SponsorFormModal mode="create" open={createOpen} onClose={() => setCreateOpen(false)} />
     </>
   );

@@ -26,55 +26,68 @@ export function useDashboardData() {
   const approveMember = useApproveMember();
   const declineMember = useDeclineMember();
 
-  const isLoading =
-    members.isLoading ||
-    pending.isLoading ||
-    events.isLoading ||
-    intros.isLoading ||
-    payments.isLoading ||
-    outcomes.isLoading;
+  const sources = [members, pending, events, intros, payments, outcomes];
+
+  const isLoading = sources.some((q) => q.isLoading);
+  const isError = sources.some((q) => q.isError);
+  const error = sources.find((q) => q.isError)?.error;
+  const isMutating = approveMember.isPending || declineMember.isPending;
+
+  const refetchAll = () => {
+    for (const q of sources) void q.refetch();
+  };
 
   const memberList = members.data?.members ?? [];
   const paymentList = payments.data?.payments ?? [];
   const pendingList = pending.data?.approvals ?? [];
 
-  const kpiValues: DashboardKPI[] = [
-    {
-      label: "Total Members",
-      value: (members.data?.meta as { total?: number } | undefined)?.total ?? memberList.length,
-      delta: "Live",
-      deltaType: "positive",
-      topColor: KPI_COLORS[0],
-    },
-    {
-      label: "Pending Approvals",
-      value: (pending.data?.meta as { total?: number } | undefined)?.total ?? pendingList.length,
-      delta: "Queue",
-      deltaType: "neutral",
-      topColor: KPI_COLORS[1],
-    },
-    {
-      label: "Events",
-      value: (events.data?.meta as { total?: number } | undefined)?.total ?? events.data?.events.length ?? 0,
-      delta: "All",
-      deltaType: "positive",
-      topColor: KPI_COLORS[2],
-    },
-    {
-      label: "Pending Intros",
-      value: (intros.data?.meta as { total?: number } | undefined)?.total ?? intros.data?.intros.length ?? 0,
-      delta: "Queue",
-      deltaType: "neutral",
-      topColor: KPI_COLORS[3],
-    },
-    {
-      label: "Revenue (paid)",
-      value: `$${Math.round(paymentList.reduce((sum, p) => sum + p.amount, 0)).toLocaleString()}`,
-      delta: "Paid",
-      deltaType: "positive",
-      topColor: KPI_COLORS[4],
-    },
-  ];
+  const kpiValues: DashboardKPI[] = isError
+    ? []
+    : [
+        {
+          label: "Total Members",
+          value:
+            (members.data?.meta as { total?: number } | undefined)?.total ?? memberList.length,
+          delta: "Live",
+          deltaType: "positive",
+          topColor: KPI_COLORS[0],
+        },
+        {
+          label: "Pending Approvals",
+          value:
+            (pending.data?.meta as { total?: number } | undefined)?.total ?? pendingList.length,
+          delta: "Queue",
+          deltaType: "neutral",
+          topColor: KPI_COLORS[1],
+        },
+        {
+          label: "Events",
+          value:
+            (events.data?.meta as { total?: number } | undefined)?.total ??
+            events.data?.events.length ??
+            0,
+          delta: "All",
+          deltaType: "positive",
+          topColor: KPI_COLORS[2],
+        },
+        {
+          label: "Pending Intros",
+          value:
+            (intros.data?.meta as { total?: number } | undefined)?.total ??
+            intros.data?.intros.length ??
+            0,
+          delta: "Queue",
+          deltaType: "neutral",
+          topColor: KPI_COLORS[3],
+        },
+        {
+          label: "Revenue (paid)",
+          value: `$${Math.round(paymentList.reduce((sum, p) => sum + p.amount, 0)).toLocaleString()}`,
+          delta: "Paid",
+          deltaType: "positive",
+          topColor: KPI_COLORS[4],
+        },
+      ];
 
   const pendingApprovals: PendingApproval[] = pendingList.slice(0, 5).map((a) => ({
     id: a.id,
@@ -84,16 +97,22 @@ export function useDashboardData() {
     submittedAt: a.submittedAt,
   }));
 
-  const revenueData = bucketPaymentsByMonth(paymentList);
-  const growthData = bucketMembersByWeek(memberList);
-  const activity = buildActivityFeed({
-    members: memberList,
-    outcomes: outcomes.data ?? [],
-    pendingCount: pendingList.length,
-  });
+  const revenueData = isError ? [] : bucketPaymentsByMonth(paymentList);
+  const growthData = isError ? [] : bucketMembersByWeek(memberList);
+  const activity = isError
+    ? []
+    : buildActivityFeed({
+        members: memberList,
+        outcomes: outcomes.data ?? [],
+        pendingCount: pendingList.length,
+      });
 
   return {
     isLoading,
+    isError,
+    error,
+    refetchAll,
+    isMutating,
     kpis: kpiValues,
     pendingApprovals,
     revenueData,

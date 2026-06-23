@@ -1,9 +1,9 @@
 "use client";
 
 import { ExportButton } from "@/shared/components/data-display/ExportButton";
+import { QueryBoundary } from "@/shared/components/data-display/QueryBoundary";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 import { SectionLabel } from "@/shared/components/ui/SectionLabel";
-import { Spinner } from "@/shared/components/ui/SectionLabel";
 import { PaymentFilters } from "../components/PaymentFilters";
 import { PaymentsTable } from "../components/PaymentsTable";
 import { RefundModal } from "../components/RefundModal";
@@ -20,7 +20,7 @@ const exportColumns = [
 ];
 
 export default function PaymentsPage() {
-  const { payments, isLoading } = useFilteredPayments();
+  const { payments, isLoading, isError, error, refetch } = useFilteredPayments();
   const exportData = payments.map((p) => ({
     memberName: p.memberName,
     amount: p.amount,
@@ -43,13 +43,17 @@ export default function PaymentsPage() {
       <section className="mb-10 space-y-4">
         <SectionLabel>Payment history</SectionLabel>
         <PaymentFilters />
-        {isLoading ? (
-          <div className="flex justify-center py-12">
-            <Spinner className="h-8 w-8" />
-          </div>
-        ) : (
+        <QueryBoundary
+          isLoading={isLoading}
+          isError={isError}
+          error={error}
+          onRetry={() => void refetch()}
+          isEmpty={!isLoading && !isError && payments.length === 0}
+          emptyTitle="No payments found"
+          emptyDescription="Paid transactions will appear here."
+        >
           <PaymentsTable payments={payments} />
-        )}
+        </QueryBoundary>
       </section>
 
       <section className="space-y-4">

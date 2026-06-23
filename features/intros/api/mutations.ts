@@ -1,5 +1,5 @@
 import { apiFetch } from "@/shared/lib/api/client";
-import { getErrorMessage } from "@/shared/lib/api/errors";
+import { showMutationError } from "@/shared/lib/api/handleApiError";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { introKeys } from "./queries";
@@ -14,7 +14,7 @@ export function useApproveIntro() {
       void qc.invalidateQueries({ queryKey: introKeys.all });
       toast.success("Intro approved");
     },
-    onError: (err) => toast.error(getErrorMessage(err)),
+    onError: showMutationError,
   });
 }
 
@@ -28,7 +28,7 @@ export function useDeclineIntro() {
       void qc.invalidateQueries({ queryKey: introKeys.all });
       toast.success("Intro declined");
     },
-    onError: (err) => toast.error(getErrorMessage(err)),
+    onError: showMutationError,
   });
 }
 
@@ -40,8 +40,9 @@ export function usePatchIntro() {
     },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: introKeys.all });
+      toast.success("Intro updated");
     },
-    onError: (err) => toast.error(getErrorMessage(err)),
+    onError: showMutationError,
   });
 }
 
@@ -59,6 +60,6 @@ export function useCreateIntro() {
       void qc.invalidateQueries({ queryKey: introKeys.all });
       toast.success("Intro created");
     },
-    onError: (err) => toast.error(getErrorMessage(err)),
+    onError: showMutationError,
   });
 }

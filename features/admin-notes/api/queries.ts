@@ -1,5 +1,7 @@
 import { apiFetch } from "@/shared/lib/api/client";
+import { showMutationError } from "@/shared/lib/api/handleApiError";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 export interface AdminNote {
   id: string;
@@ -37,6 +39,8 @@ export function useCreateAdminNote() {
     },
     onSuccess: (_d, { targetType, targetId }) => {
       void qc.invalidateQueries({ queryKey: adminNoteKeys.list(targetType, targetId) });
+      toast.success("Note saved");
     },
+    onError: showMutationError,
   });
 }

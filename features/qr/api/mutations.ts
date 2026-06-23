@@ -1,5 +1,5 @@
 import { apiFetch } from "@/shared/lib/api/client";
-import { getErrorMessage } from "@/shared/lib/api/errors";
+import { showMutationError } from "@/shared/lib/api/handleApiError";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { qrKeys } from "./queries";
@@ -21,6 +21,6 @@ export function useCreateQRCode() {
       void qc.invalidateQueries({ queryKey: qrKeys.all });
       toast.success("QR code created");
     },
-    onError: (err) => toast.error(getErrorMessage(err)),
+    onError: showMutationError,
   });
 }

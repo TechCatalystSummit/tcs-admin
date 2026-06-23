@@ -1,8 +1,8 @@
 "use client";
 
 import { ExportButton } from "@/shared/components/data-display/ExportButton";
+import { QueryBoundary } from "@/shared/components/data-display/QueryBoundary";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
-import { Spinner } from "@/shared/components/ui/SectionLabel";
 import { MemberDetailSheet } from "../components/MemberDetailSheet";
 import { MemberFilters } from "../components/MemberFilters";
 import { MembersTable } from "../components/MembersTable";
@@ -20,7 +20,7 @@ const exportColumns = [
 ];
 
 export default function MembersPage() {
-  const { members, isLoading } = useFilteredMembers();
+  const { members, isLoading, isError, error, refetch } = useFilteredMembers();
 
   return (
     <>
@@ -36,13 +36,17 @@ export default function MembersPage() {
         }
       />
       <MemberFilters />
-      {isLoading ? (
-        <div className="flex justify-center py-12">
-          <Spinner className="h-8 w-8" />
-        </div>
-      ) : (
+      <QueryBoundary
+        isLoading={isLoading}
+        isError={isError}
+        error={error}
+        onRetry={() => void refetch()}
+        isEmpty={!isLoading && !isError && members.length === 0}
+        emptyTitle="No members found"
+        emptyDescription="Try adjusting your filters or search query."
+      >
         <MembersTable />
-      )}
+      </QueryBoundary>
       <MemberDetailSheet />
     </>
   );

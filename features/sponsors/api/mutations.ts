@@ -1,5 +1,5 @@
 import { apiFetch } from "@/shared/lib/api/client";
-import { getErrorMessage } from "@/shared/lib/api/errors";
+import { showMutationError } from "@/shared/lib/api/handleApiError";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { sponsorFormToCreateBody, sponsorFormToPatchBody } from "./mappers";
@@ -28,7 +28,7 @@ export function useCreateSponsor() {
       void qc.invalidateQueries({ queryKey: sponsorKeys.all });
       toast.success("Sponsor created");
     },
-    onError: (err) => toast.error(getErrorMessage(err)),
+    onError: showMutationError,
   });
 }
 
@@ -46,7 +46,7 @@ export function useUpdateSponsor() {
       void qc.invalidateQueries({ queryKey: sponsorKeys.detail(id) });
       toast.success("Sponsor updated");
     },
-    onError: (err) => toast.error(getErrorMessage(err)),
+    onError: showMutationError,
   });
 }
 
@@ -60,6 +60,6 @@ export function useDeleteSponsor() {
       void qc.invalidateQueries({ queryKey: sponsorKeys.all });
       toast.success("Sponsor deleted");
     },
-    onError: (err) => toast.error(getErrorMessage(err)),
+    onError: showMutationError,
   });
 }

@@ -5,7 +5,7 @@ import { usePaymentsList } from "../api/queries";
 import { usePaymentsStore } from "../store/usePaymentsStore";
 
 export function useFilteredPayments() {
-  const { data, isLoading, error } = usePaymentsList();
+  const { data, isLoading, isError, error, refetch } = usePaymentsList();
   const filterPayments = usePaymentsStore((s) => s.filterPayments);
   const filters = usePaymentsStore((s) => s.filters);
 
@@ -14,5 +14,5 @@ export function useFilteredPayments() {
     [data?.payments, filterPayments, filters],
   );
 
-  return { payments, isLoading, error, meta: data?.meta };
+  return { payments, isLoading, isError, error, refetch, meta: data?.meta };
 }

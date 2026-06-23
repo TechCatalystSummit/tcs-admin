@@ -18,7 +18,7 @@ import { type ColumnDef } from "@tanstack/react-table";
 import { MoreHorizontal } from "lucide-react";
 import Link from "next/link";
 import { useMemo } from "react";
-import { useApproveMember } from "../api/mutations";
+import { useApproveMember, useBulkApproveMembers } from "../api/mutations";
 import { useFilteredMembers } from "../hooks/useFilteredMembers";
 import type { AdminMember } from "../types";
 import { StatusBadge } from "./StatusBadge";
@@ -41,6 +41,7 @@ export function MembersTable() {
   const clearSelection = useMembersStore((s) => s.clearSelection);
   const openMemberSheet = useMembersStore((s) => s.openMemberSheet);
   const approveMember = useApproveMember();
+  const bulkApprove = useBulkApproveMembers();
 
   const selectedMembers = filteredMembers.filter((m) => selectedIds.includes(m.id));
   const allSelected = selectedIds.length === filteredMembers.length && filteredMembers.length > 0;
@@ -147,16 +148,14 @@ export function MembersTable() {
   );
 
   const handleBulkApprove = () => {
-    for (const id of selectedIds) {
-      approveMember.mutate({ id });
-    }
-    clearSelection();
+    const ids = [...selectedIds];
+    bulkApprove.mutate(ids, { onSuccess: () => clearSelection() });
   };
 
   return (
     <>
       <BulkActionBar count={selectedIds.length} onClear={clearSelection}>
-        <Button size="sm" onClick={handleBulkApprove} disabled={approveMember.isPending}>
+        <Button size="sm" onClick={handleBulkApprove} disabled={bulkApprove.isPending}>
           Approve all
         </Button>
         <ExportButton

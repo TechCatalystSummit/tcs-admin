@@ -5,8 +5,10 @@ import { MemberProfilePanel } from "@/features/members/components/MemberProfileP
 import { EditMemberModal } from "@/features/members/components/EditMemberModal";
 import { useMember } from "@/features/members/api/queries";
 import { useMembersStore } from "@/features/members/store/useMembersStore";
+import { QueryErrorState } from "@/shared/components/data-display/QueryErrorState";
 import { Button } from "@/shared/components/ui/Button";
 import { GradientButton } from "@/shared/components/ui/GradientButton";
+import { Spinner } from "@/shared/components/ui/SectionLabel";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/shared/components/ui/Sheet";
 import Link from "next/link";
 import { useState } from "react";
@@ -14,14 +16,20 @@ import { useState } from "react";
 export function MemberDetailSheet() {
   const sheetMemberId = useMembersStore((s) => s.sheetMemberId);
   const closeMemberSheet = useMembersStore((s) => s.closeMemberSheet);
-  const { data: member } = useMember(sheetMemberId);
+  const { data: member, isLoading, isError, error, refetch } = useMember(sheetMemberId);
   const [editOpen, setEditOpen] = useState(false);
 
   return (
     <>
       <Sheet open={!!sheetMemberId} onOpenChange={(open) => !open && closeMemberSheet()}>
         <SheetContent className="overflow-y-auto">
-          {member && sheetMemberId && (
+          {isLoading ? (
+            <div className="flex justify-center py-12">
+              <Spinner className="h-8 w-8" />
+            </div>
+          ) : isError ? (
+            <QueryErrorState error={error} onRetry={() => void refetch()} />
+          ) : member && sheetMemberId ? (
             <>
               <SheetHeader>
                 <SheetTitle>{member.name}</SheetTitle>
@@ -43,6 +51,8 @@ export function MemberDetailSheet() {
                 </div>
               </div>
             </>
+          ) : (
+            <p className="p-6 text-sm text-muted">Member not found.</p>
           )}
         </SheetContent>
       </Sheet>

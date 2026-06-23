@@ -1,7 +1,7 @@
 import { apiFetch } from "@/shared/lib/api/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { getErrorMessage } from "@/shared/lib/api/errors";
+import { showMutationError } from "@/shared/lib/api/handleApiError";
 import { statusToApiPatch } from "./mappers";
 import { memberKeys } from "./queries";
 import type { MemberStatus, MemberTier } from "../types";
@@ -19,7 +19,7 @@ export function useApproveMember() {
       void qc.invalidateQueries({ queryKey: memberKeys.all });
       toast.success("Member approved");
     },
-    onError: (err) => toast.error(getErrorMessage(err)),
+    onError: showMutationError,
   });
 }
 
@@ -36,7 +36,7 @@ export function useDeclineMember() {
       void qc.invalidateQueries({ queryKey: memberKeys.all });
       toast.success("Member declined");
     },
-    onError: (err) => toast.error(getErrorMessage(err)),
+    onError: showMutationError,
   });
 }
 
@@ -65,16 +65,26 @@ export function useUpdateMember() {
       void qc.invalidateQueries({ queryKey: memberKeys.detail(id) });
       toast.success("Member updated");
     },
-    onError: (err) => toast.error(getErrorMessage(err)),
+    onError: showMutationError,
   });
 }
 
 export function useBulkApproveMembers() {
-  const approve = useApproveMember();
+  const qc = useQueryClient();
   return useMutation({
     mutationFn: async (ids: string[]) => {
-      await Promise.all(ids.map((id) => approve.mutateAsync({ id })));
+      await Promise.all(
+        ids.map((id) =>
+          apiFetch(`/api/members/${id}/approve`, { method: "POST", body: {} }),
+        ),
+      );
     },
-    onError: (err) => toast.error(getErrorMessage(err)),
+    onSuccess: (_data, ids) => {
+      void qc.invalidateQueries({ queryKey: memberKeys.all });
+      toast.success(
+        ids.length === 1 ? "Member approved" : `${ids.length} members approved`,
+      );
+    },
+    onError: showMutationError,
   });
 }

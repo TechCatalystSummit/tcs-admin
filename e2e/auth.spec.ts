@@ -16,4 +16,26 @@ test.describe("Auth", () => {
     await page.getByRole("button", { name: "Sign in" }).click();
     await expect(page).toHaveURL(/\/dashboard/, { timeout: 15_000 });
   });
+
+  test("invalid password shows error", async ({ page }) => {
+    await page.goto("/login");
+    await page.getByLabel("Email address").fill(ADMIN_EMAIL);
+    await page.getByLabel("Password").fill("wrong-password-xyz");
+    await page.getByRole("button", { name: "Sign in" }).click();
+    await expect(page.getByText(/invalid|incorrect|credentials/i)).toBeVisible({
+      timeout: 10_000,
+    });
+    await expect(page).toHaveURL(/\/login/);
+  });
+
+  test("logout returns to login", async ({ page }) => {
+    await page.goto("/login");
+    await page.getByLabel("Email address").fill(ADMIN_EMAIL);
+    await page.getByLabel("Password").fill(ADMIN_PASSWORD);
+    await page.getByRole("button", { name: "Sign in" }).click();
+    await expect(page).toHaveURL(/\/dashboard/, { timeout: 15_000 });
+
+    await page.locator("header").getByRole("button").last().click();
+    await expect(page).toHaveURL(/\/login/, { timeout: 10_000 });
+  });
 });

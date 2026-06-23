@@ -1,5 +1,5 @@
 import { apiFetch } from "@/shared/lib/api/client";
-import { getErrorMessage } from "@/shared/lib/api/errors";
+import { showMutationError } from "@/shared/lib/api/handleApiError";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { formToCreateBody } from "./mappers";
@@ -20,7 +20,7 @@ export function useCreateEvent() {
       void qc.invalidateQueries({ queryKey: eventKeys.all });
       toast.success("Event created");
     },
-    onError: (err) => toast.error(getErrorMessage(err)),
+    onError: showMutationError,
   });
 }
 
@@ -34,7 +34,7 @@ export function useDeleteEvent() {
       void qc.invalidateQueries({ queryKey: eventKeys.all });
       toast.success("Event deleted");
     },
-    onError: (err) => toast.error(getErrorMessage(err)),
+    onError: showMutationError,
   });
 }
 
@@ -46,7 +46,8 @@ export function useUpdateEventStatus() {
     },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: eventKeys.all });
+      toast.success("Event status updated");
     },
-    onError: (err) => toast.error(getErrorMessage(err)),
+    onError: showMutationError,
   });
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { EmptyState, PageHeader } from "@/shared/components/layout/PageHeader";
+import { QueryErrorState } from "@/shared/components/data-display/QueryErrorState";
 import { Card, CardContent, CardHeader } from "@/shared/components/ui/Card";
 import { SectionLabel } from "@/shared/components/ui/SectionLabel";
 import { Spinner } from "@/shared/components/ui/SectionLabel";
@@ -15,14 +16,35 @@ import { EventStatsRow } from "../components/EventStatsRow";
 
 export default function EventDetailPage({ eventId }: { eventId: string }) {
   const router = useRouter();
-  const { data: event, isLoading } = useEvent(eventId);
-  const { data: attendeesData, isLoading: attendeesLoading } = useEventAttendees(eventId);
+  const {
+    data: event,
+    isLoading,
+    isError: eventError,
+    error: eventErr,
+    refetch: refetchEvent,
+  } = useEvent(eventId);
+  const {
+    data: attendeesData,
+    isLoading: attendeesLoading,
+    isError: attendeesError,
+    error: attendeesErr,
+    refetch: refetchAttendees,
+  } = useEventAttendees(eventId);
 
   if (isLoading) {
     return (
       <div className="flex justify-center py-12">
         <Spinner className="h-8 w-8" />
       </div>
+    );
+  }
+
+  if (eventError) {
+    return (
+      <>
+        <PageHeader title="Event" subtitle="Could not load event" />
+        <QueryErrorState error={eventErr} onRetry={() => void refetchEvent()} />
+      </>
     );
   }
 
@@ -94,6 +116,12 @@ export default function EventDetailPage({ eventId }: { eventId: string }) {
         <div className="flex justify-center py-8">
           <Spinner className="h-6 w-6" />
         </div>
+      ) : attendeesError ? (
+        <QueryErrorState
+          error={attendeesErr}
+          title="Couldn't load attendees"
+          onRetry={() => void refetchAttendees()}
+        />
       ) : (
         <AttendeeTable attendees={attendees} />
       )}

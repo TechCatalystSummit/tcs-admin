@@ -5,7 +5,7 @@ import { useIntrosList } from "../api/queries";
 import { useIntrosStore } from "../store/useIntrosStore";
 
 export function useFilteredIntros() {
-  const { data, isLoading, error } = useIntrosList();
+  const { data, isLoading, isError, error, refetch } = useIntrosList();
   const filterIntros = useIntrosStore((s) => s.filterIntros);
   const filters = useIntrosStore((s) => s.filters);
 
@@ -14,5 +14,5 @@ export function useFilteredIntros() {
     [data?.intros, filterIntros, filters],
   );
 
-  return { intros, isLoading, error, meta: data?.meta };
+  return { intros, isLoading, isError, error, refetch, meta: data?.meta };
 }

@@ -1,5 +1,5 @@
 import { apiFetch } from "@/shared/lib/api/client";
-import { getErrorMessage } from "@/shared/lib/api/errors";
+import { showMutationError } from "@/shared/lib/api/handleApiError";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { dinnerKeys } from "./queries";
@@ -14,7 +14,7 @@ export function useUpdateDinner() {
       void qc.invalidateQueries({ queryKey: dinnerKeys.all });
       toast.success("Dinner updated");
     },
-    onError: (err) => toast.error(getErrorMessage(err)),
+    onError: showMutationError,
   });
 }
 
@@ -28,6 +28,6 @@ export function useAdjustDinnerCredits() {
       void qc.invalidateQueries({ queryKey: dinnerKeys.all });
       toast.success("Credits adjusted");
     },
-    onError: (err) => toast.error(getErrorMessage(err)),
+    onError: showMutationError,
   });
 }

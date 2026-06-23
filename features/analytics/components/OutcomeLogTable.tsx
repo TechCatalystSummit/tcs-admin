@@ -1,6 +1,7 @@
 "use client";
 
 import { DataTable } from "@/shared/components/data-display/DataTable";
+import { QueryErrorState } from "@/shared/components/data-display/QueryErrorState";
 import { Spinner } from "@/shared/components/ui/SectionLabel";
 import { formatCurrency, formatDate } from "@/shared/utils/formatters";
 import { type ColumnDef } from "@tanstack/react-table";
@@ -9,7 +10,7 @@ import { useOutcomesList } from "../api/queries";
 import type { OutcomeLogEntry } from "../types";
 
 export function OutcomeLogTable() {
-  const { data, isLoading } = useOutcomesList({ perPage: 50 });
+  const { data, isLoading, isError, error, refetch } = useOutcomesList({ perPage: 50 });
   const outcomes = data?.outcomes ?? [];
 
   const columns = useMemo<ColumnDef<OutcomeLogEntry>[]>(
@@ -45,6 +46,10 @@ export function OutcomeLogTable() {
         <Spinner className="h-6 w-6" />
       </div>
     );
+  }
+
+  if (isError) {
+    return <QueryErrorState error={error} onRetry={() => void refetch()} />;
   }
 
   return <DataTable columns={columns} data={outcomes} pageSize={10} />;

@@ -1,7 +1,18 @@
-import { QueryClient } from "@tanstack/react-query";
+import { MutationCache, QueryCache, QueryClient } from "@tanstack/react-query";
+import { handleApiError } from "./handleApiError";
 
 export function createQueryClient(): QueryClient {
-  return new QueryClient({
+  const client = new QueryClient({
+    queryCache: new QueryCache({
+      onError: (error) => {
+        handleApiError(error, client);
+      },
+    }),
+    mutationCache: new MutationCache({
+      onError: (error) => {
+        handleApiError(error, client);
+      },
+    }),
     defaultOptions: {
       queries: {
         staleTime: 30_000,
@@ -17,6 +28,7 @@ export function createQueryClient(): QueryClient {
       },
     },
   });
+  return client;
 }
 
 let browserQueryClient: QueryClient | undefined;

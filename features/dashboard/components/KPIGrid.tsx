@@ -1,12 +1,13 @@
 "use client";
 
+import { QueryErrorState } from "@/shared/components/data-display/QueryErrorState";
 import { StatCard } from "@/shared/components/data-display/StatCard";
 import { StaggerGroup, StaggerItem } from "@/shared/components/motion/Stagger";
 import { Spinner } from "@/shared/components/ui/SectionLabel";
 import { useDashboardData } from "../api/queries";
 
 export function KPIGrid() {
-  const { kpis, isLoading } = useDashboardData();
+  const { kpis, isLoading, isError, error, refetchAll } = useDashboardData();
 
   if (isLoading) {
     return (
@@ -14,6 +15,10 @@ export function KPIGrid() {
         <Spinner className="h-8 w-8" />
       </div>
     );
+  }
+
+  if (isError) {
+    return <QueryErrorState error={error} onRetry={refetchAll} />;
   }
 
   return (

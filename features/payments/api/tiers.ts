@@ -66,15 +66,16 @@ export function useMembershipTiers() {
     queryFn: async () => {
       try {
         const { data } = await apiFetch<ApiMembershipTier[]>("/api/membership/tiers");
-        if (!data?.length) return { rows: staticTierRows(), fromApi: false };
+        if (!data?.length) return { rows: staticTierRows(), fromApi: false, apiFailed: false };
         return {
           rows: [...data]
             .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
             .map(mapApiTier),
           fromApi: true,
+          apiFailed: false,
         };
-      } catch {
-        return { rows: staticTierRows(), fromApi: false };
+      } catch (error) {
+        return { rows: staticTierRows(), fromApi: false, apiFailed: true, error };
       }
     },
   });

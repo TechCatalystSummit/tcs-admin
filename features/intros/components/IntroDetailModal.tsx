@@ -10,6 +10,8 @@ import {
 } from "@/shared/components/ui/Dialog";
 import { Input } from "@/shared/components/ui/Input";
 import { Textarea } from "@/shared/components/ui/Textarea";
+import { QueryErrorState } from "@/shared/components/data-display/QueryErrorState";
+import { Spinner } from "@/shared/components/ui/SectionLabel";
 import { formatDate } from "@/shared/utils/formatters";
 import { useState } from "react";
 import {
@@ -26,10 +28,11 @@ export function IntroDetailModal() {
   const detailModalOpen = useIntrosStore((s) => s.detailModalOpen);
   const activeIntroId = useIntrosStore((s) => s.activeIntroId);
   const closeDetail = useIntrosStore((s) => s.closeDetail);
-  const { data: intro } = useIntro(activeIntroId);
+  const { data: intro, isLoading, isError, error, refetch } = useIntro(activeIntroId);
   const approveIntro = useApproveIntro();
   const declineIntro = useDeclineIntro();
   const patchIntro = usePatchIntro();
+  const isMutating = approveIntro.isPending || declineIntro.isPending || patchIntro.isPending;
 
   const [note, setNote] = useState("");
   const [outcome, setOutcome] = useState("");
@@ -42,7 +45,7 @@ export function IntroDetailModal() {
     }
   };
 
-  if (!intro) {
+  if (!intro && !isLoading && !isError) {
     return (
       <Dialog open={detailModalOpen} onOpenChange={handleOpenChange}>
         <DialogContent />
@@ -53,6 +56,14 @@ export function IntroDetailModal() {
   return (
     <Dialog open={detailModalOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
+        {isLoading ? (
+          <div className="flex justify-center py-12">
+            <Spinner className="h-8 w-8" />
+          </div>
+        ) : isError ? (
+          <QueryErrorState error={error} onRetry={() => void refetch()} />
+        ) : intro ? (
+        <>
         <DialogHeader>
           <DialogTitle>Intro Request</DialogTitle>
           <DialogDescription>
@@ -92,8 +103,8 @@ export function IntroDetailModal() {
           <div className="flex flex-wrap gap-2 pt-2 border-t border-border">
             {intro.status === "pending" && (
               <>
-                <Button size="sm" onClick={() => approveIntro.mutate(intro.id)}>Approve</Button>
-                <Button size="sm" variant="danger" onClick={() => declineIntro.mutate(intro.id)}>
+                <Button size="sm" disabled={isMutating} onClick={() => approveIntro.mutate(intro.id)}>Approve</Button>
+                <Button size="sm" variant="danger" disabled={isMutating} onClick={() => declineIntro.mutate(intro.id)}>
                   Decline
                 </Button>
               </>
@@ -101,6 +112,7 @@ export function IntroDetailModal() {
             {intro.status === "approved" && (
               <Button
                 size="sm"
+                disabled={isMutating}
                 onClick={() =>
                   patchIntro.mutate({
                     id: intro.id,
@@ -132,7 +144,7 @@ export function IntroDetailModal() {
             <Button
               size="sm"
               variant="outline"
-              disabled={!note.trim()}
+              disabled={!note.trim() || isMutating}
               onClick={() => {
                 patchIntro.mutate({ id: intro.id, body: { adminNote: note.trim() } });
                 setNote("");
@@ -142,6 +154,8 @@ export function IntroDetailModal() {
             </Button>
           </div>
         </div>
+        </>
+        ) : null}
       </DialogContent>
     </Dialog>
   );
