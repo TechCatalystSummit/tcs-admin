@@ -9,8 +9,7 @@ import { useDinnersStore } from "../store/useDinnersStore";
 import type { DinnerRequest } from "../types";
 import { DinnerStatusBadge } from "./DinnerStatusBadge";
 
-export function DinnersTable() {
-  const requests = useDinnersStore((s) => s.requests);
+export function DinnersTable({ requests }: { requests: DinnerRequest[] }) {
   const openDetail = useDinnersStore((s) => s.openDetail);
 
   const columns = useMemo<ColumnDef<DinnerRequest>[]>(

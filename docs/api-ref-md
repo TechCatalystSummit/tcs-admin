@@ -1,0 +1,2114 @@
+# TCS API Reference
+
+Complete reference for all **currently implemented** endpoints. Clients authenticate via the Supabase SDK and send the JWT as a Bearer token.
+
+**Base URL:** `http://localhost:4000` (default `PORT` from env) or your deployed API URL.
+
+---
+
+## Table of contents
+
+- [Conventions](#conventions)
+- [Health & Webhooks](#health--webhooks)
+- [Me (`/api/me`)](#me-apime)
+- [Members (`/api/members`)](#members-apimembers)
+- [Membership (`/api/membership`)](#membership-apimembership)
+- [Intros (`/api/intros`)](#intros-apiintros)
+- [Matches (`/api/matches`)](#matches-apimatches)
+- [Events (`/api/events`)](#events-apievents)
+- [QR (`/api/qr`)](#qr-apiqr)
+- [Outcomes (`/api/outcomes`)](#outcomes-apioutcomes)
+- [Referrals (`/api/referrals`)](#referrals-apireferrals)
+- [Admin notes (`/api/admin-notes`)](#admin-notes-apiadmin-notes)
+- [Dinners (`/api/dinners`)](#dinners-apidinners)
+- [Sponsors (`/api/sponsors`)](#sponsors-apisponsors)
+- [Payments (`/api/payments`)](#payments-apipayments)
+
+---
+
+## Conventions
+
+### Authentication
+
+Most routes require:
+
+```http
+Authorization: Bearer <supabase_jwt>
+```
+
+| Label | Middleware | Meaning |
+|-------|------------|---------|
+| **JWT** | `requireAuth` | Valid Bearer token; loads `req.profile` and `req.tier` |
+| **Approved** | `requireApproved` | `profile.isApproved === true` |
+| **Admin** | `requireRole('admin')` | `profile.role === 'admin'` |
+| **Executive** | `requireTier('executive')` | Tier rank ≥ executive |
+| **Cron** | `requireCronOrAdmin` | `x-cron-secret` header **or** admin JWT |
+| **Optional** | `optionalAuth` | Attaches user if token present; does not fail without |
+
+### Success response envelope
+
+Most endpoints return:
+
+```json
+{
+  "success": true,
+  "data": { },
+  "meta": { "page": 1, "perPage": 25, "total": 42 }
+}
+```
+
+`meta` appears on paginated list endpoints only. Creates return HTTP **201**; reads and updates return **200**.
+
+### Error response envelope
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "FORBIDDEN",
+    "message": "Forbidden",
+    "details": null
+  }
+}
+```
+
+| HTTP | Code | When |
+|------|------|------|
+| 401 | `UNAUTHORIZED` | Missing or invalid JWT |
+| 403 | `FORBIDDEN` | Wrong role, tier, or approval state |
+| 404 | `NOT_FOUND` | Resource not found |
+| 409 | `CONFLICT` | Duplicate or conflicting state |
+| 422 | `VALIDATION_ERROR` | Invalid query, params, or body |
+| 500 | `INTERNAL_ERROR` | Unhandled server error |
+
+### Pagination
+
+Query params: `page` (default `1`), `perPage` (default `25`, max `100`).
+
+---
+
+## Health & Webhooks
+
+### GET /health
+
+**Auth:** None
+
+**Description:** Liveness check for load balancers and monitoring.
+
+**Example request:**
+
+```bash
+curl http://localhost:4000/health
+```
+
+**Success response (200):**
+
+```json
+{ "status": "ok" }
+```
+
+> This endpoint does **not** use the `success`/`data` envelope.
+
+---
+
+### POST /api/payments/webhook
+
+**Auth:** Stripe signature (`stripe-signature` header on raw JSON body). Not for client apps.
+
+**Description:** Receives Stripe webhook events (checkout completed, invoice paid, subscription updated, etc.) and updates memberships and payment records.
+
+**Example request:**
+
+```bash
+curl -X POST http://localhost:4000/api/payments/webhook \
+  -H "Content-Type: application/json" \
+  -H "stripe-signature: whsec_..." \
+  --data-binary @stripe-event.json
+```
+
+**Success response (200):**
+
+```json
+{ "received": true }
+```
+
+---
+
+## Me (`/api/me`)
+
+### GET /api/me
+
+**Auth:** JWT
+
+**Description:** Returns the authenticated user's full profile and active membership.
+
+**Example request:**
+
+```bash
+curl -H "Authorization: Bearer $TOKEN" \
+  http://localhost:4000/api/me
+```
+
+**Success response (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "a1111111-1111-4111-8111-111111111111",
+    "role": "member",
+    "name": "Jane Doe",
+    "email": "jane@example.com",
+    "phone": "+15551234567",
+    "title": "CEO",
+    "company": "Acme Inc",
+    "city": "Austin",
+    "bio": "Building the future of fintech.",
+    "photoUrl": "https://cdn.example.com/jane.jpg",
+    "linkedinUrl": "https://linkedin.com/in/janedoe",
+    "roleCategory": "founder",
+    "industries": ["fintech", "saas"],
+    "lookingFor": ["investors", "partnerships"],
+    "canOffer": ["mentorship", "introductions"],
+    "currentGoal": "Raise Series A",
+    "expoPushToken": null,
+    "isVerified": false,
+    "isApproved": true,
+    "smsConsent": true,
+    "emailConsent": true,
+    "createdAt": "2025-01-15T10:00:00.000Z",
+    "updatedAt": "2025-06-01T14:30:00.000Z",
+    "membership": {
+      "id": "m1111111-1111-4111-8111-111111111111",
+      "status": "active",
+      "currentPeriodStart": "2025-06-01T00:00:00.000Z",
+      "currentPeriodEnd": "2026-06-01T00:00:00.000Z",
+      "tier": {
+        "id": "t2222222-2222-4222-8222-222222222222",
+        "name": "builder",
+        "annualPrice": 99900,
+        "maxIntros": 10,
+        "dinnerCredits": 0,
+        "hasDealRoom": false,
+        "hasConcierge": false,
+        "hasSponsorVisibility": true,
+        "features": [],
+        "sortOrder": 2
+      }
+    },
+    "tier": "builder"
+  }
+}
+```
+
+---
+
+### PATCH /api/me
+
+**Auth:** JWT
+
+**Description:** Partially update the caller's profile. Available to unapproved members during onboarding.
+
+**Body** (all fields optional):
+
+| Field | Type |
+|-------|------|
+| `name` | string (1–200) |
+| `phone` | string (max 50) |
+| `title`, `company`, `city` | string |
+| `bio` | string (max 2000) |
+| `photoUrl`, `linkedinUrl` | URL or `""` |
+| `roleCategory` | string |
+| `industries`, `lookingFor`, `canOffer` | string[] (max 20 each) |
+| `currentGoal` | string (max 500) |
+| `expoPushToken` | string |
+| `smsConsent`, `emailConsent` | boolean |
+
+**Example request:**
+
+```bash
+curl -X PATCH http://localhost:4000/api/me \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"title": "CTO", "city": "Dallas"}'
+```
+
+**Success response (200):** Updated profile object (same shape as `GET /api/me`).
+
+---
+
+## Members (`/api/members`)
+
+### GET /api/members
+
+**Auth:** JWT + Approved
+
+**Description:** Paginated directory of approved members.
+
+**Query:** `page`, `perPage`, `city?`, `industry?`, `search?`
+
+**Example request:**
+
+```bash
+curl -H "Authorization: Bearer $TOKEN" \
+  "http://localhost:4000/api/members?page=1&city=Austin&search=fintech"
+```
+
+**Success response (200):**
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "b2222222-2222-4222-8222-222222222222",
+      "name": "John Smith",
+      "title": "Partner",
+      "company": "Venture Co",
+      "city": "Austin",
+      "bio": "Early-stage investor.",
+      "photoUrl": "https://cdn.example.com/john.jpg",
+      "roleCategory": "investor",
+      "industries": ["fintech"],
+      "lookingFor": ["deal flow"],
+      "canOffer": ["capital", "introductions"]
+    }
+  ],
+  "meta": { "page": 1, "perPage": 25, "total": 1 }
+}
+```
+
+---
+
+### GET /api/members/pending
+
+**Auth:** JWT + Admin
+
+**Description:** Admin queue of members awaiting approval.
+
+**Query:** `page`, `perPage` (defaults 1 / 25)
+
+**Example request:**
+
+```bash
+curl -H "Authorization: Bearer $ADMIN_TOKEN" \
+  "http://localhost:4000/api/members/pending?page=1"
+```
+
+**Success response (200):**
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "c3333333-3333-4333-8333-333333333333",
+      "name": "New Member",
+      "title": "Founder",
+      "company": "Startup LLC",
+      "city": "Houston",
+      "bio": null,
+      "photoUrl": null,
+      "roleCategory": "founder",
+      "industries": ["saas"],
+      "lookingFor": ["investors"],
+      "canOffer": ["product feedback"],
+      "email": "new@example.com",
+      "createdAt": "2025-06-20T09:00:00.000Z"
+    }
+  ],
+  "meta": { "page": 1, "perPage": 25, "total": 1 }
+}
+```
+
+---
+
+### GET /api/members/:id
+
+**Auth:** JWT (service enforces: self, approved member viewing approved member, or admin)
+
+**Description:** Get a member profile by UUID.
+
+**Params:** `id` — UUID
+
+**Example request:**
+
+```bash
+curl -H "Authorization: Bearer $TOKEN" \
+  http://localhost:4000/api/members/b2222222-2222-4222-8222-222222222222
+```
+
+**Success response (200):** Full `profileToApi` object (no nested `membership`).
+
+---
+
+### PATCH /api/members/:id
+
+**Auth:** JWT + Admin
+
+**Description:** Admin partial update of a member profile.
+
+**Body** (all optional): `role` (`member` | `sponsor_user` | `admin`), profile fields from `PATCH /api/me`, plus `isVerified`, `isApproved`, `approvalNotes`.
+
+**Example request:**
+
+```bash
+curl -X PATCH http://localhost:4000/api/members/c3333333-3333-4333-8333-333333333333 \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"isVerified": true}'
+```
+
+**Success response (200):** Updated profile object.
+
+---
+
+### POST /api/members/:id/approve
+
+**Auth:** JWT + Admin
+
+**Description:** Approve a pending member (`isApproved: true`).
+
+**Body:** `{ "approvalNotes": "string (optional, max 2000)" }`
+
+**Example request:**
+
+```bash
+curl -X POST http://localhost:4000/api/members/c3333333-3333-4333-8333-333333333333/approve \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"approvalNotes": "Strong referral from board member."}'
+```
+
+**Success response (200):** Updated profile with `isApproved: true`.
+
+---
+
+### POST /api/members/:id/decline
+
+**Auth:** JWT + Admin
+
+**Description:** Decline a member application (`isApproved: false`).
+
+**Body:** `{ "approvalNotes": "string (optional)" }`
+
+**Example request:**
+
+```bash
+curl -X POST http://localhost:4000/api/members/c3333333-3333-4333-8333-333333333333/decline \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"approvalNotes": "Incomplete application."}'
+```
+
+**Success response (200):** Updated profile with `isApproved: false`.
+
+---
+
+## Membership (`/api/membership`)
+
+### GET /api/membership/tiers
+
+**Auth:** JWT
+
+**Description:** List all membership tiers and their limits.
+
+**Example request:**
+
+```bash
+curl -H "Authorization: Bearer $TOKEN" \
+  http://localhost:4000/api/membership/tiers
+```
+
+**Success response (200):**
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "t1111111-1111-4111-8111-111111111111",
+      "name": "community",
+      "annualPrice": 0,
+      "maxIntros": 3,
+      "dinnerCredits": 0,
+      "hasDealRoom": false,
+      "hasConcierge": false,
+      "hasSponsorVisibility": false,
+      "features": [],
+      "sortOrder": 1
+    },
+    {
+      "id": "t2222222-2222-4222-8222-222222222222",
+      "name": "builder",
+      "annualPrice": 99900,
+      "maxIntros": 10,
+      "dinnerCredits": 0,
+      "hasDealRoom": false,
+      "hasConcierge": false,
+      "hasSponsorVisibility": true,
+      "features": [],
+      "sortOrder": 2
+    }
+  ]
+}
+```
+
+---
+
+### GET /api/membership
+
+**Auth:** JWT
+
+**Description:** Caller's active membership, or `null` if none.
+
+**Example request:**
+
+```bash
+curl -H "Authorization: Bearer $TOKEN" \
+  http://localhost:4000/api/membership
+```
+
+**Success response (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "m1111111-1111-4111-8111-111111111111",
+    "status": "active",
+    "currentPeriodStart": "2025-06-01T00:00:00.000Z",
+    "currentPeriodEnd": "2026-06-01T00:00:00.000Z",
+    "tier": {
+      "id": "t2222222-2222-4222-8222-222222222222",
+      "name": "builder",
+      "annualPrice": 99900,
+      "maxIntros": 10,
+      "dinnerCredits": 0,
+      "hasDealRoom": false,
+      "hasConcierge": false,
+      "hasSponsorVisibility": true,
+      "features": [],
+      "sortOrder": 2
+    }
+  }
+}
+```
+
+---
+
+### POST /api/membership/checkout
+
+**Auth:** JWT
+
+**Description:** Create a Stripe Checkout session for a membership tier.
+
+**Body:** `{ "tierId": "<uuid>" }`
+
+**Example request:**
+
+```bash
+curl -X POST http://localhost:4000/api/membership/checkout \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"tierId": "t2222222-2222-4222-8222-222222222222"}'
+```
+
+**Success response (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "checkoutUrl": "https://checkout.stripe.com/c/pay/cs_test_...",
+    "sessionId": "cs_test_a1b2c3"
+  }
+}
+```
+
+---
+
+### POST /api/membership/portal
+
+**Auth:** JWT
+
+**Description:** Create a Stripe Billing Portal session for the caller to manage subscription.
+
+**Example request:**
+
+```bash
+curl -X POST http://localhost:4000/api/membership/portal \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+**Success response (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "portalUrl": "https://billing.stripe.com/p/session/test_..."
+  }
+}
+```
+
+---
+
+## Intros (`/api/intros`)
+
+> **Note:** Intro endpoints return **snake_case** raw database rows (including joined `from` / `to` profile snippets). Other features use camelCase.
+
+### GET /api/intros
+
+**Auth:** JWT
+
+**Description:** List intro requests for the caller (sent, received, or all).
+
+**Query:**
+
+| Param | Values |
+|-------|--------|
+| `direction` | `sent` \| `received` \| `all` (default `all`) |
+| `status` | `pending`, `approved`, `declined`, `completed`, `follow_up_needed` |
+| `page`, `perPage` | pagination |
+
+**Example request:**
+
+```bash
+curl -H "Authorization: Bearer $TOKEN" \
+  "http://localhost:4000/api/intros?direction=sent&status=pending"
+```
+
+**Success response (200):**
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "i1111111-1111-4111-8111-111111111111",
+      "from_user_id": "a1111111-1111-4111-8111-111111111111",
+      "to_user_id": "b2222222-2222-4222-8222-222222222222",
+      "match_id": null,
+      "reason": "partnership",
+      "message": "Would love to connect on a potential partnership.",
+      "status": "pending",
+      "outcome": null,
+      "outcome_value": null,
+      "admin_note": null,
+      "approved_by": null,
+      "created_at": "2025-06-15T12:00:00.000Z",
+      "updated_at": "2025-06-15T12:00:00.000Z",
+      "from": {
+        "id": "a1111111-1111-4111-8111-111111111111",
+        "name": "Jane Doe",
+        "title": "CEO",
+        "company": "Acme Inc",
+        "photo_url": "https://cdn.example.com/jane.jpg"
+      },
+      "to": {
+        "id": "b2222222-2222-4222-8222-222222222222",
+        "name": "John Smith",
+        "title": "Partner",
+        "company": "Venture Co",
+        "photo_url": null
+      }
+    }
+  ],
+  "meta": { "page": 1, "perPage": 25, "total": 1 }
+}
+```
+
+---
+
+### POST /api/intros
+
+**Auth:** JWT + Approved
+
+**Description:** Create an intro request. Enforces tier intro limits (`403 INTRO_LIMIT_REACHED` when exceeded).
+
+**Body:**
+
+| Field | Type | Required |
+|-------|------|----------|
+| `toUserId` | UUID | yes |
+| `matchId` | UUID | no |
+| `reason` | enum | yes — `partnership`, `investment`, `vendor_opportunity`, `sponsorship`, `mentorship`, `hiring`, `dinner_meeting`, `general_connection` |
+| `message` | string (max 1000) | no |
+
+**Example request:**
+
+```bash
+curl -X POST http://localhost:4000/api/intros \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "toUserId": "b2222222-2222-4222-8222-222222222222",
+    "reason": "investment",
+    "message": "Raising Series A — would value your perspective."
+  }'
+```
+
+**Success response (201):** Single intro row (snake_case, no joined profiles).
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "i1111111-1111-4111-8111-111111111111",
+    "from_user_id": "a1111111-1111-4111-8111-111111111111",
+    "to_user_id": "b2222222-2222-4222-8222-222222222222",
+    "match_id": null,
+    "reason": "investment",
+    "message": "Raising Series A — would value your perspective.",
+    "status": "pending",
+    "outcome": null,
+    "outcome_value": null,
+    "admin_note": null,
+    "approved_by": null,
+    "created_at": "2025-06-15T12:00:00.000Z",
+    "updated_at": "2025-06-15T12:00:00.000Z"
+  }
+}
+```
+
+---
+
+### GET /api/intros/:id
+
+**Auth:** JWT (participant or admin)
+
+**Description:** Get a single intro request.
+
+**Params:** `id` — UUID
+
+**Example request:**
+
+```bash
+curl -H "Authorization: Bearer $TOKEN" \
+  http://localhost:4000/api/intros/i1111111-1111-4111-8111-111111111111
+```
+
+**Success response (200):** Intro row (snake_case).
+
+---
+
+### POST /api/intros/:id/approve
+
+**Auth:** JWT + Admin
+
+**Description:** Approve an intro; notifies both parties.
+
+**Example request:**
+
+```bash
+curl -X POST http://localhost:4000/api/intros/i1111111-1111-4111-8111-111111111111/approve \
+  -H "Authorization: Bearer $ADMIN_TOKEN"
+```
+
+**Success response (200):** Updated intro row with `status: "approved"`.
+
+---
+
+### POST /api/intros/:id/decline
+
+**Auth:** JWT + Admin
+
+**Description:** Decline an intro request.
+
+**Body:** `{ "reason": "string (optional, max 500)" }`
+
+**Example request:**
+
+```bash
+curl -X POST http://localhost:4000/api/intros/i1111111-1111-4111-8111-111111111111/decline \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"reason": "Parties already connected."}'
+```
+
+**Success response (200):** Updated intro row with `status: "declined"`.
+
+---
+
+### PATCH /api/intros/:id
+
+**Auth:** JWT (participant or admin)
+
+**Description:** Update intro status or outcome. Participants may set `status` to `completed` or `follow_up_needed`. Only admins may set `adminNote`.
+
+**Body** (all optional): `status` (`completed` | `follow_up_needed`), `outcome`, `outcomeValue`, `adminNote`
+
+**Example request:**
+
+```bash
+curl -X PATCH http://localhost:4000/api/intros/i1111111-1111-4111-8111-111111111111 \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"status": "completed", "outcome": "Met for coffee; exploring partnership."}'
+```
+
+**Success response (200):** Updated intro row.
+
+---
+
+## Matches (`/api/matches`)
+
+### POST /api/matches/refresh
+
+**Auth:** Cron (`x-cron-secret` header) **or** Admin JWT
+
+**Description:** Run the match-scoring job for all approved members, or a single user when `userId` is provided.
+
+**Body:** `{ "userId": "<uuid> (optional)" }`
+
+**Example request:**
+
+```bash
+curl -X POST http://localhost:4000/api/matches/refresh \
+  -H "x-cron-secret: $CRON_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{}'
+```
+
+**Success response (200):**
+
+```json
+{
+  "success": true,
+  "data": { "created": 12, "updated": 45 }
+}
+```
+
+---
+
+### GET /api/matches
+
+**Auth:** JWT + Approved
+
+**Description:** List matches for the caller with the other user's public profile.
+
+**Query:** `status` (`pending` \| `connected` \| `passed` \| `super_connected`, default `pending`), `page`, `perPage`
+
+**Example request:**
+
+```bash
+curl -H "Authorization: Bearer $TOKEN" \
+  "http://localhost:4000/api/matches?status=pending&page=1"
+```
+
+**Success response (200):**
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "mt111111-1111-4111-8111-111111111111",
+      "userAId": "a1111111-1111-4111-8111-111111111111",
+      "userBId": "b2222222-2222-4222-8222-222222222222",
+      "score": 85,
+      "matchReason": "Shared fintech focus and complementary founder/investor roles",
+      "conversationStarter": "You both listed Austin and fintech — worth a conversation.",
+      "sharedInterests": ["fintech", "saas"],
+      "status": "pending",
+      "scoredAt": "2025-06-10T08:00:00.000Z",
+      "updatedAt": "2025-06-10T08:00:00.000Z",
+      "otherUser": {
+        "id": "b2222222-2222-4222-8222-222222222222",
+        "name": "John Smith",
+        "title": "Partner",
+        "company": "Venture Co",
+        "photoUrl": null,
+        "city": "Austin",
+        "roleCategory": "investor"
+      }
+    }
+  ],
+  "meta": { "page": 1, "perPage": 25, "total": 1 }
+}
+```
+
+---
+
+### GET /api/matches/:id
+
+**Auth:** JWT + Approved
+
+**Description:** Get a single match with `otherUser` profile.
+
+**Params:** `id` — UUID
+
+**Example request:**
+
+```bash
+curl -H "Authorization: Bearer $TOKEN" \
+  http://localhost:4000/api/matches/mt111111-1111-4111-8111-111111111111
+```
+
+**Success response (200):** Single match object (same shape as list item).
+
+---
+
+### POST /api/matches/:id/swipe
+
+**Auth:** JWT + Approved
+
+**Description:** Record a swipe action on a match.
+
+**Body:** `{ "action": "connected" | "passed" | "super_connected" }`
+
+**Example request:**
+
+```bash
+curl -X POST http://localhost:4000/api/matches/mt111111-1111-4111-8111-111111111111/swipe \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"action": "connected"}'
+```
+
+**Success response (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "mt111111-1111-4111-8111-111111111111",
+    "userAId": "a1111111-1111-4111-8111-111111111111",
+    "userBId": "b2222222-2222-4222-8222-222222222222",
+    "score": 85,
+    "matchReason": "Shared fintech focus and complementary founder/investor roles",
+    "conversationStarter": "You both listed Austin and fintech — worth a conversation.",
+    "sharedInterests": ["fintech", "saas"],
+    "status": "connected",
+    "scoredAt": "2025-06-10T08:00:00.000Z",
+    "updatedAt": "2025-06-15T14:00:00.000Z"
+  }
+}
+```
+
+---
+
+## Events (`/api/events`)
+
+`:id` accepts a UUID or event slug (e.g. `tcs-summit-2026`).
+
+### GET /api/events
+
+**Auth:** JWT + Approved
+
+**Description:** List published/live events for members.
+
+**Query:** `page`, `perPage`, `eventType?` (`summit` \| `dinner` \| `workshop` \| `roundtable` \| `networking`), `city?`, `upcoming?` (`true` \| `false`)
+
+**Example request:**
+
+```bash
+curl -H "Authorization: Bearer $TOKEN" \
+  "http://localhost:4000/api/events?upcoming=true&eventType=summit"
+```
+
+**Success response (200):**
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "e1111111-1111-4111-8111-111111111111",
+      "title": "TechCatalyst Summit 2026",
+      "slug": "tcs-summit-2026",
+      "description": "Annual summit for tech leaders.",
+      "eventType": "summit",
+      "status": "published",
+      "startsAt": "2026-03-15T09:00:00.000Z",
+      "endsAt": "2026-03-15T18:00:00.000Z",
+      "venueName": "Convention Center",
+      "venueAddress": "123 Main St",
+      "city": "Austin",
+      "capacity": 500,
+      "isVip": true,
+      "vipTierMin": "executive",
+      "isInviteOnly": false,
+      "coverImageUrl": "https://cdn.example.com/summit.jpg",
+      "recapVideoUrl": null,
+      "agenda": [],
+      "speakers": [],
+      "sponsorIds": [],
+      "createdBy": "admin-uuid",
+      "createdAt": "2025-06-01T00:00:00.000Z",
+      "updatedAt": "2025-06-01T00:00:00.000Z"
+    }
+  ],
+  "meta": { "page": 1, "perPage": 25, "total": 1 }
+}
+```
+
+---
+
+### GET /api/events/admin
+
+**Auth:** JWT + Admin
+
+**Description:** List all events including drafts; supports `status` filter.
+
+**Query:** same as `GET /api/events` plus `status?` (`draft` \| `published` \| `live` \| `past` \| `canceled`)
+
+**Example request:**
+
+```bash
+curl -H "Authorization: Bearer $ADMIN_TOKEN" \
+  "http://localhost:4000/api/events/admin?status=draft"
+```
+
+**Success response (200):** Paginated `eventToApi[]`.
+
+---
+
+### POST /api/events
+
+**Auth:** JWT + Admin
+
+**Description:** Create a new event.
+
+**Body** (required unless noted):
+
+| Field | Type |
+|-------|------|
+| `title` | string (1–300) |
+| `slug` | lowercase kebab-case |
+| `startsAt` | ISO datetime |
+| `description`, `endsAt`, venue fields, `city` | optional |
+| `eventType` | enum (default `summit`) |
+| `status` | enum (default `draft`) |
+| `capacity` | positive int |
+| `isVip`, `isInviteOnly` | boolean |
+| `vipTierMin` | string |
+| `coverImageUrl`, `recapVideoUrl` | URL |
+| `agenda`, `speakers` | object[] |
+| `sponsorIds` | UUID[] |
+
+**Example request:**
+
+```bash
+curl -X POST http://localhost:4000/api/events \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Founder Dinner",
+    "slug": "founder-dinner-june",
+    "eventType": "dinner",
+    "status": "draft",
+    "startsAt": "2026-06-20T19:00:00.000Z",
+    "city": "Austin",
+    "capacity": 20
+  }'
+```
+
+**Success response (201):** Created `eventToApi` object.
+
+---
+
+### GET /api/events/:id/rsvp
+
+**Auth:** JWT
+
+**Description:** Get the caller's RSVP for an event, or `null`.
+
+**Example request:**
+
+```bash
+curl -H "Authorization: Bearer $TOKEN" \
+  http://localhost:4000/api/events/tcs-summit-2026/rsvp
+```
+
+**Success response (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "r1111111-1111-4111-8111-111111111111",
+    "eventId": "e1111111-1111-4111-8111-111111111111",
+    "userId": "a1111111-1111-4111-8111-111111111111",
+    "status": "confirmed",
+    "isVip": false,
+    "createdAt": "2025-06-10T10:00:00.000Z"
+  }
+}
+```
+
+---
+
+### POST /api/events/:id/rsvp
+
+**Auth:** JWT + Approved
+
+**Description:** RSVP or update RSVP. Waitlists when at capacity.
+
+**Body:** `{ "isVip": boolean (optional) }`
+
+**Example request:**
+
+```bash
+curl -X POST http://localhost:4000/api/events/tcs-summit-2026/rsvp \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"isVip": false}'
+```
+
+**Success response (201):** `rsvpToApi` object.
+
+---
+
+### DELETE /api/events/:id/rsvp
+
+**Auth:** JWT
+
+**Description:** Cancel the caller's RSVP (`status: "canceled"`).
+
+**Example request:**
+
+```bash
+curl -X DELETE http://localhost:4000/api/events/tcs-summit-2026/rsvp \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+**Success response (200):** RSVP with `status: "canceled"`.
+
+---
+
+### POST /api/events/:id/checkin
+
+**Auth:** JWT + Approved
+
+**Description:** Check in to an event. Requires confirmed RSVP (admin may override).
+
+**Body:** `{ "qrScanId": "<uuid> (optional)" }`
+
+**Example request:**
+
+```bash
+curl -X POST http://localhost:4000/api/events/tcs-summit-2026/checkin \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{}'
+```
+
+**Success response (201):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "ch111111-1111-4111-8111-111111111111",
+    "eventId": "e1111111-1111-4111-8111-111111111111",
+    "userId": "a1111111-1111-4111-8111-111111111111",
+    "qrScanId": null,
+    "checkedInAt": "2026-03-15T09:15:00.000Z"
+  }
+}
+```
+
+---
+
+### GET /api/events/:id/attendees
+
+**Auth:** JWT + Admin
+
+**Description:** Paginated attendee list with check-in status.
+
+**Query:** `page`, `perPage`
+
+**Example request:**
+
+```bash
+curl -H "Authorization: Bearer $ADMIN_TOKEN" \
+  "http://localhost:4000/api/events/tcs-summit-2026/attendees?page=1"
+```
+
+**Success response (200):**
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "rsvpId": "r1111111-1111-4111-8111-111111111111",
+      "status": "confirmed",
+      "isVip": false,
+      "rsvpCreatedAt": "2025-06-10T10:00:00.000Z",
+      "user": {
+        "id": "a1111111-1111-4111-8111-111111111111",
+        "name": "Jane Doe",
+        "email": "jane@example.com",
+        "title": "CEO",
+        "company": "Acme Inc"
+      },
+      "checkedInAt": "2026-03-15T09:15:00.000Z"
+    }
+  ],
+  "meta": { "page": 1, "perPage": 25, "total": 1 }
+}
+```
+
+---
+
+### GET /api/events/:id
+
+**Auth:** JWT + Approved
+
+**Description:** Get a single event by UUID or slug.
+
+**Example request:**
+
+```bash
+curl -H "Authorization: Bearer $TOKEN" \
+  http://localhost:4000/api/events/tcs-summit-2026
+```
+
+**Success response (200):** Single `eventToApi` object.
+
+---
+
+### PATCH /api/events/:id
+
+**Auth:** JWT + Admin
+
+**Description:** Partial update of an event.
+
+**Body:** Any fields from `POST /api/events` (all optional).
+
+**Example request:**
+
+```bash
+curl -X PATCH http://localhost:4000/api/events/tcs-summit-2026 \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"status": "published"}'
+```
+
+**Success response (200):** Updated `eventToApi` object.
+
+---
+
+### DELETE /api/events/:id
+
+**Auth:** JWT + Admin
+
+**Description:** Soft-cancel an event (`status: "canceled"`).
+
+**Example request:**
+
+```bash
+curl -X DELETE http://localhost:4000/api/events/founder-dinner-june \
+  -H "Authorization: Bearer $ADMIN_TOKEN"
+```
+
+**Success response (200):** Event with `status: "canceled"`.
+
+---
+
+## QR (`/api/qr`)
+
+### POST /api/qr/scan
+
+**Auth:** Optional JWT (logs `userId` when authenticated)
+
+**Description:** Log a QR code scan. IP and user-agent are captured server-side.
+
+**Body:**
+
+| Field | Type |
+|-------|------|
+| `shortCode` | string (required) |
+| `converted` | boolean (default `false`) |
+| `conversionType` | string or null |
+
+**Example request:**
+
+```bash
+curl -X POST http://localhost:4000/api/qr/scan \
+  -H "Content-Type: application/json" \
+  -d '{"shortCode": "summit26", "converted": false}'
+```
+
+**Success response (201):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "qs111111-1111-4111-8111-111111111111",
+    "qrCodeId": "qr111111-1111-4111-8111-111111111111",
+    "userId": null,
+    "ipAddress": "203.0.113.10",
+    "userAgent": "Mozilla/5.0 ...",
+    "city": "Austin",
+    "country": "US",
+    "converted": false,
+    "conversionType": null,
+    "scannedAt": "2025-06-20T16:00:00.000Z"
+  }
+}
+```
+
+---
+
+### GET /api/qr
+
+**Auth:** JWT + Admin
+
+**Description:** List QR codes with optional filters.
+
+**Query:** `page`, `perPage`, `qrType?`, `eventId?`, `isActive?` (`true` \| `false`)
+
+**Example request:**
+
+```bash
+curl -H "Authorization: Bearer $ADMIN_TOKEN" \
+  "http://localhost:4000/api/qr?qrType=event_signup&isActive=true"
+```
+
+**Success response (200):**
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "qr111111-1111-4111-8111-111111111111",
+      "shortCode": "summit26",
+      "dubLinkId": null,
+      "qrType": "event_signup",
+      "eventId": "e1111111-1111-4111-8111-111111111111",
+      "sponsorId": null,
+      "campaign": "summit-2026",
+      "source": "flyer",
+      "partner": null,
+      "isActive": true,
+      "createdBy": "admin-uuid",
+      "createdAt": "2025-06-01T00:00:00.000Z"
+    }
+  ],
+  "meta": { "page": 1, "perPage": 25, "total": 1 }
+}
+```
+
+---
+
+### POST /api/qr
+
+**Auth:** JWT + Admin
+
+**Description:** Create a QR code.
+
+**Body:**
+
+| Field | Required |
+|-------|----------|
+| `shortCode` | yes — alphanumeric, `_`, `-` |
+| `qrType` | yes — see enum below |
+| `eventId`, `sponsorId` | UUID, optional |
+| `campaign`, `source`, `partner` | string, optional |
+
+`qrType` values: `event_signup`, `event_rsvp`, `dinner_request`, `vip_application`, `sponsor_inquiry`, `speaker_application`, `member_referral`, `sponsor_booth`, `post_event_followup`, `general_signup`
+
+**Example request:**
+
+```bash
+curl -X POST http://localhost:4000/api/qr \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "shortCode": "summit26",
+    "qrType": "event_signup",
+    "eventId": "e1111111-1111-4111-8111-111111111111",
+    "campaign": "summit-2026"
+  }'
+```
+
+**Success response (201):** `qrCodeToApi` object.
+
+---
+
+### GET /api/qr/:id/analytics
+
+**Auth:** JWT + Admin
+
+**Description:** Scan analytics for a QR code.
+
+**Params:** `id` — UUID
+
+**Example request:**
+
+```bash
+curl -H "Authorization: Bearer $ADMIN_TOKEN" \
+  http://localhost:4000/api/qr/qr111111-1111-4111-8111-111111111111/analytics
+```
+
+**Success response (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "qrCodeId": "qr111111-1111-4111-8111-111111111111",
+    "shortCode": "summit26",
+    "totalScans": 150,
+    "uniqueScans": 120,
+    "conversions": 45,
+    "byCountry": [
+      { "country": "US", "count": 130 },
+      { "country": "CA", "count": 20 }
+    ],
+    "recentScans": [
+      {
+        "id": "qs111111-1111-4111-8111-111111111111",
+        "qrCodeId": "qr111111-1111-4111-8111-111111111111",
+        "userId": null,
+        "ipAddress": "203.0.113.10",
+        "userAgent": "Mozilla/5.0 ...",
+        "city": "Austin",
+        "country": "US",
+        "converted": true,
+        "conversionType": "rsvp",
+        "scannedAt": "2025-06-20T16:00:00.000Z"
+      }
+    ]
+  }
+}
+```
+
+---
+
+### GET /api/qr/:id
+
+**Auth:** JWT + Admin
+
+**Description:** Get a single QR code.
+
+**Example request:**
+
+```bash
+curl -H "Authorization: Bearer $ADMIN_TOKEN" \
+  http://localhost:4000/api/qr/qr111111-1111-4111-8111-111111111111
+```
+
+**Success response (200):** `qrCodeToApi` object.
+
+---
+
+### PATCH /api/qr/:id
+
+**Auth:** JWT + Admin
+
+**Description:** Partial update of a QR code (including `isActive`).
+
+**Body:** Partial create fields + `isActive?`
+
+**Example request:**
+
+```bash
+curl -X PATCH http://localhost:4000/api/qr/qr111111-1111-4111-8111-111111111111 \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"isActive": false}'
+```
+
+**Success response (200):** Updated `qrCodeToApi` object.
+
+---
+
+## Outcomes (`/api/outcomes`)
+
+### GET /api/outcomes
+
+**Auth:** JWT (own outcomes only; admins see all)
+
+**Description:** Paginated list of logged outcomes.
+
+**Query:** `page`, `perPage`, `outcomeType?`, `fromDate?`, `toDate?` (ISO datetimes)
+
+`outcomeType`: `connection_made`, `meeting_scheduled`, `meeting_completed`, `deal_discussed`, `investment_interest`, `hiring_opportunity`, `vendor_opportunity`, `revenue_influenced`, `dinner_outcome`, `sponsor_roi`
+
+**Example request:**
+
+```bash
+curl -H "Authorization: Bearer $TOKEN" \
+  "http://localhost:4000/api/outcomes?outcomeType=meeting_completed"
+```
+
+**Success response (200):**
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "o1111111-1111-4111-8111-111111111111",
+      "introId": "i1111111-1111-4111-8111-111111111111",
+      "userAId": "a1111111-1111-4111-8111-111111111111",
+      "userBId": "b2222222-2222-4222-8222-222222222222",
+      "outcomeType": "meeting_completed",
+      "strength": "strong",
+      "estimatedValue": 50000,
+      "notes": "Discussed partnership terms.",
+      "eventId": null,
+      "sponsorId": null,
+      "loggedBy": "a1111111-1111-4111-8111-111111111111",
+      "createdAt": "2025-06-18T10:00:00.000Z"
+    }
+  ],
+  "meta": { "page": 1, "perPage": 25, "total": 1 }
+}
+```
+
+---
+
+### POST /api/outcomes
+
+**Auth:** JWT + Approved
+
+**Description:** Log a new outcome between two members.
+
+**Body:**
+
+| Field | Required |
+|-------|----------|
+| `userBId` | yes — UUID |
+| `outcomeType` | yes — enum (see above) |
+| `introId`, `eventId`, `sponsorId` | UUID, optional |
+| `strength` | `weak` \| `good` \| `strong` \| `deal_made` |
+| `estimatedValue` | number |
+| `notes` | string (max 2000) |
+
+**Example request:**
+
+```bash
+curl -X POST http://localhost:4000/api/outcomes \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "userBId": "b2222222-2222-4222-8222-222222222222",
+    "introId": "i1111111-1111-4111-8111-111111111111",
+    "outcomeType": "meeting_completed",
+    "strength": "good",
+    "notes": "Productive first meeting."
+  }'
+```
+
+**Success response (201):** `outcomeToApi` object.
+
+---
+
+### GET /api/outcomes/:id
+
+**Auth:** JWT (participant or admin)
+
+**Description:** Get a single outcome.
+
+**Example request:**
+
+```bash
+curl -H "Authorization: Bearer $TOKEN" \
+  http://localhost:4000/api/outcomes/o1111111-1111-4111-8111-111111111111
+```
+
+**Success response (200):** `outcomeToApi` object.
+
+---
+
+## Referrals (`/api/referrals`)
+
+### GET /api/referrals
+
+**Auth:** JWT
+
+**Description:** List referrals created by the caller.
+
+**Query:** `page`, `perPage`
+
+**Example request:**
+
+```bash
+curl -H "Authorization: Bearer $TOKEN" \
+  "http://localhost:4000/api/referrals?page=1"
+```
+
+**Success response (200):**
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "rf111111-1111-4111-8111-111111111111",
+      "referrerId": "a1111111-1111-4111-8111-111111111111",
+      "referredEmail": "friend@example.com",
+      "referredUserId": null,
+      "qrCodeId": "qr111111-1111-4111-8111-111111111111",
+      "source": "app",
+      "converted": false,
+      "convertedAt": null,
+      "createdAt": "2025-06-12T08:00:00.000Z"
+    }
+  ],
+  "meta": { "page": 1, "perPage": 25, "total": 1 }
+}
+```
+
+---
+
+### POST /api/referrals
+
+**Auth:** JWT
+
+**Description:** Create a referral record.
+
+**Body:**
+
+| Field | Required |
+|-------|----------|
+| `referredEmail` | yes — email |
+| `qrCodeId` | UUID, optional |
+| `source` | string (max 100), optional |
+
+**Example request:**
+
+```bash
+curl -X POST http://localhost:4000/api/referrals \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"referredEmail": "friend@example.com", "source": "mobile_app"}'
+```
+
+**Success response (201):** `referralToApi` object.
+
+---
+
+### PATCH /api/referrals/:id
+
+**Auth:** JWT + Admin
+
+**Description:** Update referral conversion status.
+
+**Body:** `converted?` (boolean), `referredUserId?` (UUID)
+
+**Example request:**
+
+```bash
+curl -X PATCH http://localhost:4000/api/referrals/rf111111-1111-4111-8111-111111111111 \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"converted": true, "referredUserId": "d4444444-4444-4444-8444-444444444444"}'
+```
+
+**Success response (200):** Updated `referralToApi` object.
+
+---
+
+## Admin notes (`/api/admin-notes`)
+
+All routes require JWT + Admin.
+
+### GET /api/admin-notes
+
+**Description:** List admin notes for a target entity.
+
+**Query:** `targetType` (`user` \| `event` \| `sponsor` \| `intro` \| `dinner`), `targetId` (UUID), `page`, `perPage`
+
+**Example request:**
+
+```bash
+curl -H "Authorization: Bearer $ADMIN_TOKEN" \
+  "http://localhost:4000/api/admin-notes?targetType=user&targetId=a1111111-1111-4111-8111-111111111111"
+```
+
+**Success response (200):**
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "n1111111-1111-4111-8111-111111111111",
+      "targetType": "user",
+      "targetId": "a1111111-1111-4111-8111-111111111111",
+      "note": "VIP prospect — follow up before summit.",
+      "createdBy": "admin-uuid",
+      "createdAt": "2025-06-10T14:00:00.000Z"
+    }
+  ],
+  "meta": { "page": 1, "perPage": 25, "total": 1 }
+}
+```
+
+---
+
+### POST /api/admin-notes
+
+**Description:** Create an admin note on a target entity.
+
+**Body:** `targetType`, `targetId` (UUID), `note` (1–5000 chars)
+
+**Example request:**
+
+```bash
+curl -X POST http://localhost:4000/api/admin-notes \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "targetType": "intro",
+    "targetId": "i1111111-1111-4111-8111-111111111111",
+    "note": "High-priority intro — expedite approval."
+  }'
+```
+
+**Success response (201):** `noteToApi` object.
+
+---
+
+## Dinners (`/api/dinners`)
+
+### GET /api/dinners
+
+**Auth:** JWT (own dinners; admins see all)
+
+**Description:** List dinner requests.
+
+**Query:** `page`, `perPage`, `status?` (`requested`, `under_review`, `approved`, `scheduled`, `completed`, `outcome_logged`, `canceled`)
+
+**Example request:**
+
+```bash
+curl -H "Authorization: Bearer $TOKEN" \
+  "http://localhost:4000/api/dinners?status=requested"
+```
+
+**Success response (200):**
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "d1111111-1111-4111-8111-111111111111",
+      "userId": "a1111111-1111-4111-8111-111111111111",
+      "whoToMeet": "Series A investors in fintech",
+      "dinnerPurpose": "Explore investment fit",
+      "desiredOutcome": "Second meeting scheduled",
+      "preferredDates": ["2026-07-10", "2026-07-12"],
+      "preferredRestaurant": "Uchi Austin",
+      "budgetRange": "$200-300",
+      "coveredBy": "tcs",
+      "status": "requested",
+      "scheduledAt": null,
+      "restaurantConfirmed": null,
+      "outcomeNotes": null,
+      "creditsUsed": 1,
+      "adminNote": null,
+      "createdAt": "2025-06-15T10:00:00.000Z",
+      "updatedAt": "2025-06-15T10:00:00.000Z"
+    }
+  ],
+  "meta": { "page": 1, "perPage": 25, "total": 1 }
+}
+```
+
+---
+
+### POST /api/dinners
+
+**Auth:** JWT + Executive tier
+
+**Description:** Submit a concierge dinner request. Debits one dinner credit.
+
+**Body:**
+
+| Field | Required |
+|-------|----------|
+| `dinnerPurpose` | yes (1–1000 chars) |
+| `whoToMeet`, `desiredOutcome` | optional strings |
+| `preferredDates` | date[] (`YYYY-MM-DD`) |
+| `preferredRestaurant`, `budgetRange` | optional |
+| `coveredBy` | `tcs` \| `sponsor` \| `member` (default `tcs`) |
+
+**Example request:**
+
+```bash
+curl -X POST http://localhost:4000/api/dinners \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "dinnerPurpose": "Meet potential Series A lead",
+    "whoToMeet": "Fintech VCs",
+    "preferredDates": ["2026-07-10"]
+  }'
+```
+
+**Success response (201):** `dinnerToApi` object.
+
+---
+
+### GET /api/dinners/credits
+
+**Auth:** JWT
+
+**Description:** Caller's dinner credit balance.
+
+**Example request:**
+
+```bash
+curl -H "Authorization: Bearer $TOKEN" \
+  http://localhost:4000/api/dinners/credits
+```
+
+**Success response (200)** — with credits:
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "dc111111-1111-4111-8111-111111111111",
+    "userId": "a1111111-1111-4111-8111-111111111111",
+    "balance": 2,
+    "totalUsed": 1,
+    "expiresAt": "2026-12-31T23:59:59.000Z",
+    "updatedAt": "2025-06-01T00:00:00.000Z"
+  }
+}
+```
+
+**Success response (200)** — no record yet:
+
+```json
+{
+  "success": true,
+  "data": {
+    "userId": "a1111111-1111-4111-8111-111111111111",
+    "balance": 0,
+    "totalUsed": 0,
+    "expiresAt": null,
+    "updatedAt": null
+  }
+}
+```
+
+---
+
+### POST /api/dinners/credits
+
+**Auth:** JWT + Admin
+
+**Description:** Set a member's dinner credit balance.
+
+**Body:** `{ "userId": "<uuid>", "balance": <int ≥ 0> }`
+
+**Example request:**
+
+```bash
+curl -X POST http://localhost:4000/api/dinners/credits \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"userId": "a1111111-1111-4111-8111-111111111111", "balance": 3}'
+```
+
+**Success response (200):** `dinnerCreditsToApi` object.
+
+---
+
+### GET /api/dinners/:id
+
+**Auth:** JWT (owner or admin)
+
+**Description:** Get a single dinner request.
+
+**Example request:**
+
+```bash
+curl -H "Authorization: Bearer $TOKEN" \
+  http://localhost:4000/api/dinners/d1111111-1111-4111-8111-111111111111
+```
+
+**Success response (200):** `dinnerToApi` object.
+
+---
+
+### PATCH /api/dinners/:id
+
+**Auth:** JWT + Admin
+
+**Description:** Update dinner status, schedule, or admin notes.
+
+**Body** (all optional): `status`, `scheduledAt` (ISO datetime), `restaurantConfirmed`, `adminNote`, `outcomeNotes`
+
+**Example request:**
+
+```bash
+curl -X PATCH http://localhost:4000/api/dinners/d1111111-1111-4111-8111-111111111111 \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "status": "scheduled",
+    "scheduledAt": "2026-07-10T19:00:00.000Z",
+    "restaurantConfirmed": "Uchi Austin"
+  }'
+```
+
+**Success response (200):** Updated `dinnerToApi` object.
+
+---
+
+## Sponsors (`/api/sponsors`)
+
+### GET /api/sponsors
+
+**Auth:** JWT + Approved
+
+**Description:** Paginated list of active sponsors.
+
+**Query:** `page`, `perPage`, `industry?`
+
+**Example request:**
+
+```bash
+curl -H "Authorization: Bearer $TOKEN" \
+  "http://localhost:4000/api/sponsors?industry=cloud"
+```
+
+**Success response (200):**
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "sp111111-1111-4111-8111-111111111111",
+      "name": "CloudCorp",
+      "logoUrl": "https://cdn.example.com/cloudcorp.png",
+      "website": "https://cloudcorp.com",
+      "description": "Enterprise cloud solutions.",
+      "industry": "cloud",
+      "tier": "premium",
+      "targetAudience": "CTOs and engineering leaders",
+      "ctaLabel": "Book a demo",
+      "ctaUrl": "https://cloudcorp.com/demo",
+      "isActive": true,
+      "createdAt": "2025-05-01T00:00:00.000Z",
+      "updatedAt": "2025-05-01T00:00:00.000Z"
+    }
+  ],
+  "meta": { "page": 1, "perPage": 25, "total": 1 }
+}
+```
+
+---
+
+### GET /api/sponsors/me
+
+**Auth:** JWT (sponsor portal user)
+
+**Description:** Sponsor portal profile, linked sponsor record, and placeholder metrics.
+
+**Example request:**
+
+```bash
+curl -H "Authorization: Bearer $SPONSOR_TOKEN" \
+  http://localhost:4000/api/sponsors/me
+```
+
+**Success response (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "sponsorUser": {
+      "id": "su111111-1111-4111-8111-111111111111",
+      "name": "Alex Sponsor",
+      "email": "alex@cloudcorp.com",
+      "role": "admin"
+    },
+    "sponsor": {
+      "id": "sp111111-1111-4111-8111-111111111111",
+      "name": "CloudCorp",
+      "logoUrl": "https://cdn.example.com/cloudcorp.png",
+      "website": "https://cloudcorp.com",
+      "description": "Enterprise cloud solutions.",
+      "industry": "cloud",
+      "tier": "premium",
+      "targetAudience": "CTOs and engineering leaders",
+      "ctaLabel": "Book a demo",
+      "ctaUrl": "https://cloudcorp.com/demo",
+      "isActive": true,
+      "createdAt": "2025-05-01T00:00:00.000Z",
+      "updatedAt": "2025-05-01T00:00:00.000Z"
+    },
+    "metrics": { "views": 0, "clicks": 0 }
+  }
+}
+```
+
+---
+
+### POST /api/sponsors
+
+**Auth:** JWT + Admin
+
+**Description:** Create a sponsor.
+
+**Body:** `name` (required), `logoUrl`, `website`, `description`, `industry`, `tier` (`standard` \| `premium` \| `title` \| `legacy`), `targetAudience`, `ctaLabel`, `ctaUrl`
+
+**Example request:**
+
+```bash
+curl -X POST http://localhost:4000/api/sponsors \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "CloudCorp",
+    "website": "https://cloudcorp.com",
+    "industry": "cloud",
+    "tier": "premium"
+  }'
+```
+
+**Success response (201):** `sponsorToApi` object.
+
+---
+
+### GET /api/sponsors/:id/offers
+
+**Auth:** JWT + Approved
+
+**Description:** List active offers for a sponsor, filtered by caller's tier.
+
+**Query:** `page`, `perPage`
+
+**Example request:**
+
+```bash
+curl -H "Authorization: Bearer $TOKEN" \
+  "http://localhost:4000/api/sponsors/sp111111-1111-4111-8111-111111111111/offers"
+```
+
+**Success response (200):**
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "of111111-1111-4111-8111-111111111111",
+      "sponsorId": "sp111111-1111-4111-8111-111111111111",
+      "title": "20% off first year",
+      "description": "Exclusive discount for TCS members.",
+      "ctaLabel": "Claim offer",
+      "ctaUrl": "https://cloudcorp.com/tcs-offer",
+      "tierMin": "builder",
+      "isActive": true,
+      "expiresAt": "2026-12-31T23:59:59.000Z",
+      "createdAt": "2025-05-01T00:00:00.000Z"
+    }
+  ],
+  "meta": { "page": 1, "perPage": 25, "total": 1 }
+}
+```
+
+---
+
+### GET /api/sponsors/:id
+
+**Auth:** JWT + Approved
+
+**Description:** Get a single sponsor.
+
+**Example request:**
+
+```bash
+curl -H "Authorization: Bearer $TOKEN" \
+  http://localhost:4000/api/sponsors/sp111111-1111-4111-8111-111111111111
+```
+
+**Success response (200):** `sponsorToApi` object.
+
+---
+
+### PATCH /api/sponsors/:id
+
+**Auth:** JWT + Admin
+
+**Description:** Partial update of a sponsor (including `isActive`).
+
+**Example request:**
+
+```bash
+curl -X PATCH http://localhost:4000/api/sponsors/sp111111-1111-4111-8111-111111111111 \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"ctaLabel": "Schedule demo"}'
+```
+
+**Success response (200):** Updated `sponsorToApi` object.
+
+---
+
+### DELETE /api/sponsors/:id
+
+**Auth:** JWT + Admin
+
+**Description:** Soft-deactivate a sponsor (`isActive: false`).
+
+**Example request:**
+
+```bash
+curl -X DELETE http://localhost:4000/api/sponsors/sp111111-1111-4111-8111-111111111111 \
+  -H "Authorization: Bearer $ADMIN_TOKEN"
+```
+
+**Success response (200):** Sponsor with `isActive: false`.
+
+---
+
+## Payments (`/api/payments`)
+
+### GET /api/payments
+
+**Auth:** JWT + Admin
+
+**Description:** Paginated payment history for admin reporting.
+
+**Query:** `page`, `perPage`, `status?` (`paid` \| `failed` \| `refunded` \| `pending`), `userId?`, `from?`, `to?` (ISO datetimes)
+
+**Example request:**
+
+```bash
+curl -H "Authorization: Bearer $ADMIN_TOKEN" \
+  "http://localhost:4000/api/payments?status=paid&page=1"
+```
+
+**Success response (200):**
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "p1111111-1111-4111-8111-111111111111",
+      "userId": "a1111111-1111-4111-8111-111111111111",
+      "stripePaymentId": "pi_3abc123",
+      "stripeInvoiceId": "in_1abc123",
+      "amountCents": 99900,
+      "currency": "usd",
+      "status": "paid",
+      "description": "Builder annual membership",
+      "tierId": "t2222222-2222-4222-8222-222222222222",
+      "refundedAt": null,
+      "refundReason": null,
+      "createdAt": "2025-06-01T12:00:00.000Z"
+    }
+  ],
+  "meta": { "page": 1, "perPage": 25, "total": 1 }
+}
+```

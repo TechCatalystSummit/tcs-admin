@@ -10,12 +10,8 @@ import { usePaymentsStore } from "../store/usePaymentsStore";
 import type { Payment } from "../types";
 import { PaymentStatusBadge } from "./PaymentStatusBadge";
 
-export function PaymentsTable() {
-  usePaymentsStore((s) => s.filters);
-  usePaymentsStore((s) => s.payments);
-  const getFilteredPayments = usePaymentsStore((s) => s.getFilteredPayments);
+export function PaymentsTable({ payments }: { payments: Payment[] }) {
   const openRefund = usePaymentsStore((s) => s.openRefund);
-  const filteredPayments = getFilteredPayments();
 
   const columns = useMemo<ColumnDef<Payment>[]>(
     () => [
@@ -61,19 +57,6 @@ export function PaymentsTable() {
         cell: ({ row }) => <PaymentStatusBadge status={row.original.status} />,
       },
       {
-        id: "receipt",
-        header: "Receipt",
-        cell: ({ row }) =>
-          row.original.receiptUrl ? (
-            <a href={row.original.receiptUrl} className="text-xs text-blue1 hover:underline">
-              View
-            </a>
-          ) : (
-            <span className="text-xs text-hint">—</span>
-          ),
-        enableSorting: false,
-      },
-      {
         id: "actions",
         header: "",
         cell: ({ row }) =>
@@ -88,5 +71,5 @@ export function PaymentsTable() {
     [openRefund],
   );
 
-  return <DataTable columns={columns} data={filteredPayments} />;
+  return <DataTable columns={columns} data={payments} />;
 }

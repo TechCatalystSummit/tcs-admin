@@ -1,7 +1,9 @@
 "use client";
 
-import { AdminNotesPanel, MemberProfilePanel } from "@/features/members/components/MemberProfilePanel";
+import { AdminNotesPanel } from "@/features/members/components/AdminNotesPanel";
+import { MemberProfilePanel } from "@/features/members/components/MemberProfilePanel";
 import { EditMemberModal } from "@/features/members/components/EditMemberModal";
+import { useMember } from "@/features/members/api/queries";
 import { useMembersStore } from "@/features/members/store/useMembersStore";
 import { Button } from "@/shared/components/ui/Button";
 import { GradientButton } from "@/shared/components/ui/GradientButton";
@@ -12,9 +14,8 @@ import { useState } from "react";
 export function MemberDetailSheet() {
   const sheetMemberId = useMembersStore((s) => s.sheetMemberId);
   const closeMemberSheet = useMembersStore((s) => s.closeMemberSheet);
-  const getMemberById = useMembersStore((s) => s.getMemberById);
+  const { data: member } = useMember(sheetMemberId);
   const [editOpen, setEditOpen] = useState(false);
-  const member = sheetMemberId ? getMemberById(sheetMemberId) : undefined;
 
   return (
     <>

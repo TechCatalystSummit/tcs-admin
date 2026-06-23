@@ -224,6 +224,33 @@ All 12 admin modules ship with mock data, Zustand stores, responsive shell, comm
 
 ---
 
+## Phase 2 — API Integration ✓
+
+**Goal:** Connect tcs-admin to tcs-api REST backend with Supabase email/password auth.
+
+| Phase | Module | Status |
+|-------|--------|--------|
+| 0 | Infrastructure (apiFetch, React Query, Supabase auth, Vitest, Playwright) | ✓ |
+| 1 | Members (list, pending, approve/decline, detail, edit) | ✓ |
+| 2 | Events (admin list, create, detail) | ✓ |
+| 3 | Intros (list, approve/decline, create) | ✓ |
+| 4 | Dinners + Sponsors | ✓ |
+| 5 | QR + Payments | ✓ |
+| 6 | Dashboard aggregation + admin-notes | ✓ |
+| 7 | Deferred: notifications, outreach, analytics (MockDataBanner) | ✓ |
+
+**Cursor rules:** `.cursor/rules/` (architecture, api-client, feature-integration, phase-gates, testing)
+
+**Skills:** `.cursor/skills/tcs-api-integrate`, `tcs-phase-validate`, `tcs-api-reference`
+
+**Validation:** `docs/PHASE2_VALIDATION.md`, `docs/PHASE2_DEFERRED.md`
+
+**Env:** Copy `.env.example` → `.env.local` with Supabase keys from tcs-api and `NEXT_PUBLIC_API_URL=http://localhost:4000`
+
+**Verify:** `npx tsc --noEmit && npm run lint && npm test && npm run build`
+
+---
+
 ## Per-Sprint Workflow
 2. Run `npx tsc --noEmit && npm run lint && npm run build`
 3. Review against build plan component inventory

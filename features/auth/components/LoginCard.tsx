@@ -3,7 +3,6 @@
 import { brand } from "@/core/constants/brand";
 import { fadeUp, scaleIn, transition } from "@/core/constants/motion";
 import { useAuthStore } from "@/features/auth/store/useAuthStore";
-import { Button } from "@/shared/components/ui/Button";
 import { GradientButton } from "@/shared/components/ui/GradientButton";
 import { Input } from "@/shared/components/ui/Input";
 import { motion } from "motion/react";
@@ -12,18 +11,31 @@ import { useEffect, useState } from "react";
 
 export function LoginCard() {
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const login = useAuthStore((s) => s.login);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const isLoading = useAuthStore((s) => s.isLoading);
+  const error = useAuthStore((s) => s.error);
+  const clearError = useAuthStore((s) => s.clearError);
   const router = useRouter();
 
   useEffect(() => {
-    if (isAuthenticated) router.replace("/dashboard");
-  }, [isAuthenticated, router]);
+    if (!isLoading && isAuthenticated) router.replace("/dashboard");
+  }, [isAuthenticated, isLoading, router]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    login(email || "admin@techcatalystsummit.com");
-    router.push("/dashboard");
+    clearError();
+    setSubmitting(true);
+    try {
+      await login(email, password);
+      router.push("/dashboard");
+    } catch (err) {
+      void err;
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -58,24 +70,29 @@ export function LoginCard() {
         <Input
           label="Email address"
           type="email"
-          placeholder="admin@techcatalystsummit.com"
+          placeholder="admin1@tcs.dev"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          required
+          autoComplete="email"
         />
-        <GradientButton type="submit" className="w-full">
-          Send magic link
+        <Input
+          label="Password"
+          type="password"
+          placeholder="••••••••"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+          autoComplete="current-password"
+        />
+        {error ? (
+          <p className="text-sm text-red-600" role="alert">
+            {error}
+          </p>
+        ) : null}
+        <GradientButton type="submit" className="w-full" disabled={submitting || isLoading}>
+          {submitting ? "Signing in…" : "Sign in"}
         </GradientButton>
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-border" />
-          </div>
-          <div className="relative flex justify-center text-xs">
-            <span className="bg-white px-2 text-hint">or</span>
-          </div>
-        </div>
-        <Button type="button" variant="outline" className="w-full" onClick={handleSubmit}>
-          Continue with Google
-        </Button>
       </motion.form>
 
       <motion.p

@@ -10,8 +10,20 @@ import {
 } from "@/shared/components/ui/Dialog";
 import { Textarea } from "@/shared/components/ui/Textarea";
 import { useState } from "react";
+import { useMembersList } from "@/features/members/api/queries";
+import { useCreateIntro } from "../api/mutations";
 import { useIntrosStore } from "../store/useIntrosStore";
 import { INTRO_REASON_LABELS, type IntroReason } from "../types";
+
+const REASON_TO_API: Record<IntroReason, string> = {
+  investment: "investment",
+  partnership: "partnership",
+  mentorship: "mentorship",
+  hiring: "hiring",
+  "customer-intro": "general_connection",
+  advisory: "mentorship",
+  other: "general_connection",
+};
 
 const reasons: IntroReason[] = [
   "investment",
@@ -26,16 +38,15 @@ const reasons: IntroReason[] = [
 export function CreateIntroModal() {
   const createModalOpen = useIntrosStore((s) => s.createModalOpen);
   const closeCreateModal = useIntrosStore((s) => s.closeCreateModal);
-  const createIntro = useIntrosStore((s) => s.createIntro);
-  const members = useIntrosStore((s) => s.members);
+  const createIntro = useCreateIntro();
+  const { data: membersData } = useMembersList();
+  const members = membersData?.members ?? [];
 
-  const [fromMemberId, setFromMemberId] = useState("");
   const [toMemberId, setToMemberId] = useState("");
   const [reason, setReason] = useState<IntroReason>("partnership");
   const [reasonDetail, setReasonDetail] = useState("");
 
   const resetForm = () => {
-    setFromMemberId("");
     setToMemberId("");
     setReason("partnership");
     setReasonDetail("");
@@ -48,17 +59,24 @@ export function CreateIntroModal() {
     }
   };
 
-  const canSubmit =
-    fromMemberId &&
-    toMemberId &&
-    fromMemberId !== toMemberId &&
-    reasonDetail.trim().length > 0;
+  const canSubmit = toMemberId && reasonDetail.trim().length > 0;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!canSubmit) return;
-    createIntro({ fromMemberId, toMemberId, reason, reasonDetail: reasonDetail.trim() });
-    resetForm();
+    createIntro.mutate(
+      {
+        toUserId: toMemberId,
+        reason: REASON_TO_API[reason],
+        message: reasonDetail.trim(),
+      },
+      {
+        onSuccess: () => {
+          resetForm();
+          closeCreateModal();
+        },
+      },
+    );
   };
 
   return (
@@ -67,33 +85,14 @@ export function CreateIntroModal() {
         <DialogHeader>
           <DialogTitle>Create Intro</DialogTitle>
           <DialogDescription>
-            Manually create a curated introduction between two members.
+            Create an introduction request to a member (sent from your admin account).
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
-            <label htmlFor="from-member" className="text-xs font-medium text-ink2">
-              Member A (From)
-            </label>
-            <select
-              id="from-member"
-              value={fromMemberId}
-              onChange={(e) => setFromMemberId(e.target.value)}
-              className="h-11 w-full rounded-xl border border-border bg-white px-3 text-sm text-ink"
-            >
-              <option value="">Select member...</option>
-              {members.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.name} · {m.company}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="space-y-1.5">
             <label htmlFor="to-member" className="text-xs font-medium text-ink2">
-              Member B (To)
+              Member (To)
             </label>
             <select
               id="to-member"
@@ -103,7 +102,7 @@ export function CreateIntroModal() {
             >
               <option value="">Select member...</option>
               {members.map((m) => (
-                <option key={m.id} value={m.id} disabled={m.id === fromMemberId}>
+                <option key={m.id} value={m.id}>
                   {m.name} · {m.company}
                 </option>
               ))}
@@ -140,7 +139,7 @@ export function CreateIntroModal() {
             <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={!canSubmit}>
+            <Button type="submit" disabled={!canSubmit || createIntro.isPending}>
               Create Intro
             </Button>
           </div>

@@ -5,14 +5,13 @@ import { Button } from "@/shared/components/ui/Button";
 import { Card, CardContent } from "@/shared/components/ui/Card";
 import { formatDate } from "@/shared/utils/formatters";
 import Link from "next/link";
-import { toast } from "sonner";
+import { useApproveMember, useDeclineMember } from "../api/mutations";
 import type { ApprovalRequest } from "../types";
-import { useMembersStore } from "../store/useMembersStore";
 import { TierBadge } from "./TierBadge";
 
 export function ApprovalCard({ approval }: { approval: ApprovalRequest }) {
-  const approve = useMembersStore((s) => s.approveApproval);
-  const decline = useMembersStore((s) => s.declineApproval);
+  const approve = useApproveMember();
+  const decline = useDeclineMember();
 
   return (
     <Card>
@@ -34,20 +33,16 @@ export function ApprovalCard({ approval }: { approval: ApprovalRequest }) {
               <div className="flex gap-2 mt-4">
                 <Button
                   size="sm"
-                  onClick={() => {
-                    approve(approval.id);
-                    toast.success(`${approval.name} approved`);
-                  }}
+                  disabled={approve.isPending}
+                  onClick={() => approve.mutate({ id: approval.id })}
                 >
                   Approve
                 </Button>
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => {
-                    decline(approval.id);
-                    toast.error(`${approval.name} declined`);
-                  }}
+                  disabled={decline.isPending}
+                  onClick={() => decline.mutate({ id: approval.id })}
                 >
                   Decline
                 </Button>

@@ -3,16 +3,20 @@
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 import { useRouter } from "next/navigation";
 import { EventForm } from "../components/EventForm";
-import { useEventsStore } from "../store/useEventsStore";
+import { useCreateEvent } from "../api/mutations";
 import type { EventFormData } from "../types";
 
 export default function NewEventPage() {
   const router = useRouter();
-  const addEvent = useEventsStore((s) => s.addEvent);
+  const createEvent = useCreateEvent();
 
   const handleSubmit = (data: EventFormData) => {
-    const event = addEvent(data);
-    router.push(`/events/${event.id}`);
+    createEvent.mutate(data, {
+      onSuccess: (created) => {
+        const id = (created as { id?: string })?.id;
+        router.push(id ? `/events/${id}` : "/events");
+      },
+    });
   };
 
   return (

@@ -1,5 +1,7 @@
 "use client";
 
+import { useCreateQRCode } from "../api/mutations";
+import { useQRStore } from "../store/useQRStore";
 import { Button } from "@/shared/components/ui/Button";
 import {
   Dialog,
@@ -10,7 +12,6 @@ import {
 } from "@/shared/components/ui/Dialog";
 import { Input } from "@/shared/components/ui/Input";
 import { useState } from "react";
-import { useQRStore } from "../store/useQRStore";
 import { QR_TYPE_LABELS, type QRType } from "../types";
 
 const QR_TYPES = Object.keys(QR_TYPE_LABELS) as QRType[];
@@ -18,7 +19,7 @@ const QR_TYPES = Object.keys(QR_TYPE_LABELS) as QRType[];
 export function GenerateQRModal() {
   const open = useQRStore((s) => s.generateOpen);
   const closeGenerate = useQRStore((s) => s.closeGenerate);
-  const generateCode = useQRStore((s) => s.generateCode);
+  const createQR = useCreateQRCode();
 
   const [name, setName] = useState("");
   const [type, setType] = useState<QRType>("event_check_in");
@@ -37,14 +38,21 @@ export function GenerateQRModal() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !source.trim() || !campaign.trim()) return;
-    generateCode({
-      name: name.trim(),
-      type,
-      source: source.trim(),
-      campaign: campaign.trim(),
-      eventName: eventName.trim() || undefined,
-    });
-    reset();
+    createQR.mutate(
+      {
+        name: name.trim(),
+        type,
+        source: source.trim(),
+        campaign: campaign.trim(),
+        eventName: eventName.trim() || undefined,
+      },
+      {
+        onSuccess: () => {
+          reset();
+          closeGenerate();
+        },
+      },
+    );
   };
 
   return (
@@ -107,7 +115,7 @@ export function GenerateQRModal() {
               onChange={(e) => setEventName(e.target.value)}
             />
             <div className="flex gap-2 pt-2">
-              <Button type="submit" size="sm">Generate</Button>
+              <Button type="submit" size="sm" disabled={createQR.isPending}>Generate</Button>
               <Button type="button" variant="ghost" size="sm" onClick={closeGenerate}>
                 Cancel
               </Button>
@@ -118,9 +126,6 @@ export function GenerateQRModal() {
             <div className="w-32 h-32 rounded-xl bg-white border border-border flex items-center justify-center mb-4">
               <span className="text-hint text-xs text-center px-2">Preview updates after generate</span>
             </div>
-            <p className="text-xs text-muted text-center">
-              QR preview will appear here with download options once created.
-            </p>
           </div>
         </form>
       </DialogContent>

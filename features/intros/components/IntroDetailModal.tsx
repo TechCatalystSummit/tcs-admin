@@ -12,31 +12,32 @@ import { Input } from "@/shared/components/ui/Input";
 import { Textarea } from "@/shared/components/ui/Textarea";
 import { formatDate } from "@/shared/utils/formatters";
 import { useState } from "react";
+import {
+  useApproveIntro,
+  useDeclineIntro,
+  usePatchIntro,
+} from "../api/mutations";
+import { useIntro } from "../api/queries";
 import { useIntrosStore } from "../store/useIntrosStore";
 import { INTRO_REASON_LABELS } from "../types";
 import { IntroStatusBadge } from "./IntroStatusBadge";
 
 export function IntroDetailModal() {
   const detailModalOpen = useIntrosStore((s) => s.detailModalOpen);
+  const activeIntroId = useIntrosStore((s) => s.activeIntroId);
   const closeDetail = useIntrosStore((s) => s.closeDetail);
-  const getActiveIntro = useIntrosStore((s) => s.getActiveIntro);
-  const approveIntro = useIntrosStore((s) => s.approveIntro);
-  const declineIntro = useIntrosStore((s) => s.declineIntro);
-  const completeIntro = useIntrosStore((s) => s.completeIntro);
-  const setFollowUp = useIntrosStore((s) => s.setFollowUp);
-  const addNote = useIntrosStore((s) => s.addNote);
-  const assignIntro = useIntrosStore((s) => s.assignIntro);
+  const { data: intro } = useIntro(activeIntroId);
+  const approveIntro = useApproveIntro();
+  const declineIntro = useDeclineIntro();
+  const patchIntro = usePatchIntro();
 
-  const intro = getActiveIntro();
   const [note, setNote] = useState("");
-  const [assignee, setAssignee] = useState("");
   const [outcome, setOutcome] = useState("");
 
   const handleOpenChange = (open: boolean) => {
     if (!open) {
       closeDetail();
       setNote("");
-      setAssignee("");
       setOutcome("");
     }
   };
@@ -88,45 +89,27 @@ export function IntroDetailModal() {
             <p className="text-sm text-muted mt-1">{intro.reasonDetail}</p>
           </div>
 
-          {intro.outcome && (
-            <div>
-              <p className="text-[10px] uppercase text-hint font-semibold">Outcome</p>
-              <p className="text-sm text-ink2 mt-1">{intro.outcome}</p>
-            </div>
-          )}
-
-          {intro.assignedTo && (
-            <div>
-              <p className="text-[10px] uppercase text-hint font-semibold">Assigned To</p>
-              <p className="text-sm text-ink2 mt-1">{intro.assignedTo}</p>
-            </div>
-          )}
-
-          {intro.adminNotes && (
-            <div>
-              <p className="text-[10px] uppercase text-hint font-semibold">Admin Notes</p>
-              <p className="text-sm text-ink2 mt-1 whitespace-pre-wrap">{intro.adminNotes}</p>
-            </div>
-          )}
-
           <div className="flex flex-wrap gap-2 pt-2 border-t border-border">
             {intro.status === "pending" && (
               <>
-                <Button size="sm" onClick={() => approveIntro(intro.id)}>Approve</Button>
-                <Button size="sm" variant="danger" onClick={() => declineIntro(intro.id)}>
+                <Button size="sm" onClick={() => approveIntro.mutate(intro.id)}>Approve</Button>
+                <Button size="sm" variant="danger" onClick={() => declineIntro.mutate(intro.id)}>
                   Decline
                 </Button>
               </>
             )}
             {intro.status === "approved" && (
-              <>
-                <Button size="sm" onClick={() => completeIntro(intro.id, outcome || undefined)}>
-                  Mark Complete
-                </Button>
-                <Button size="sm" variant="outline" onClick={() => setFollowUp(intro.id)}>
-                  Set Follow-up
-                </Button>
-              </>
+              <Button
+                size="sm"
+                onClick={() =>
+                  patchIntro.mutate({
+                    id: intro.id,
+                    body: { status: "completed", outcome: outcome || undefined },
+                  })
+                }
+              >
+                Mark Complete
+              </Button>
             )}
           </div>
 
@@ -137,26 +120,6 @@ export function IntroDetailModal() {
               onChange={(e) => setOutcome(e.target.value)}
             />
           )}
-
-          <div className="space-y-2">
-            <Input
-              label="Assign to"
-              placeholder="Admin name or team"
-              value={assignee}
-              onChange={(e) => setAssignee(e.target.value)}
-            />
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={!assignee.trim()}
-              onClick={() => {
-                assignIntro(intro.id, assignee.trim());
-                setAssignee("");
-              }}
-            >
-              Assign
-            </Button>
-          </div>
 
           <div className="space-y-2">
             <Textarea
@@ -171,7 +134,7 @@ export function IntroDetailModal() {
               variant="outline"
               disabled={!note.trim()}
               onClick={() => {
-                addNote(intro.id, note.trim());
+                patchIntro.mutate({ id: intro.id, body: { adminNote: note.trim() } });
                 setNote("");
               }}
             >

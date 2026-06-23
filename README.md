@@ -2,7 +2,15 @@
 
 Web admin dashboard for **TechCatalyst Summit** — manage members, events, sponsors, outreach, and more.
 
-Phase 1 is a static UI backed by mock data and Zustand stores. API integration (Supabase) is planned for Phase 2.
+Phase 1 UI is complete. Phase 2 API integration connects to **tcs-api** (`http://localhost:4000`) via Supabase JWT auth.
+
+## Stack (Phase 2 additions)
+
+| Layer | Package |
+|---|---|
+| Server state | `@tanstack/react-query` |
+| Auth | `@supabase/supabase-js` |
+| Tests | `vitest`, `msw`, `@playwright/test` |
 
 ## Stack
 
@@ -60,6 +68,10 @@ Branding matches the [Summit-App](https://github.com/Diallo222/Summit-App) mobil
 Full build spec: `docs/TCS_Web_Admin_Build_Plan.md`  
 Sprint tracker: `docs/IMPLEMENTATION_PLAN.md`
 
-## Phase 2 (not started)
+## Phase 2 (API integrated)
 
-When the backend is ready: replace `mock*.ts` with Supabase API modules, magic-link auth, and third-party integrations (Dub.co, SendGrid, Stripe). See build plan §12.
+- tcs-api REST at `NEXT_PUBLIC_API_URL` (default `http://localhost:4000`)
+- Supabase email/password auth for admins
+- Deferred modules (notifications, outreach, analytics) show `MockDataBanner` until tcs-api sprints S16–S20
+
+See `docs/IMPLEMENTATION_PLAN.md` § Phase 2 and `docs/PHASE2_VALIDATION.md`.

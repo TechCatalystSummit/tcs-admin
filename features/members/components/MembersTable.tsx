@@ -18,7 +18,8 @@ import { type ColumnDef } from "@tanstack/react-table";
 import { MoreHorizontal } from "lucide-react";
 import Link from "next/link";
 import { useMemo } from "react";
-import { toast } from "sonner";
+import { useApproveMember } from "../api/mutations";
+import { useFilteredMembers } from "../hooks/useFilteredMembers";
 import type { AdminMember } from "../types";
 import { StatusBadge } from "./StatusBadge";
 import { TierBadge } from "./TierBadge";
@@ -33,16 +34,13 @@ const exportColumns = [
 ];
 
 export function MembersTable() {
-  useMembersStore((s) => s.filters);
-  useMembersStore((s) => s.members);
-  const getFilteredMembers = useMembersStore((s) => s.getFilteredMembers);
+  const { members: filteredMembers } = useFilteredMembers();
   const selectedIds = useMembersStore((s) => s.selectedIds);
   const toggleSelect = useMembersStore((s) => s.toggleSelect);
   const selectAll = useMembersStore((s) => s.selectAll);
   const clearSelection = useMembersStore((s) => s.clearSelection);
-  const bulkApproveMembers = useMembersStore((s) => s.bulkApproveMembers);
   const openMemberSheet = useMembersStore((s) => s.openMemberSheet);
-  const filteredMembers = getFilteredMembers();
+  const approveMember = useApproveMember();
 
   const selectedMembers = filteredMembers.filter((m) => selectedIds.includes(m.id));
   const allSelected = selectedIds.length === filteredMembers.length && filteredMembers.length > 0;
@@ -126,10 +124,7 @@ export function MembersTable() {
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
-                onClick={() => {
-                  bulkApproveMembers([row.original.id]);
-                  toast.success(`Approved ${row.original.name}`);
-                }}
+                onClick={() => approveMember.mutate({ id: row.original.id })}
               >
                 Approve member
               </DropdownMenuItem>
@@ -139,20 +134,29 @@ export function MembersTable() {
         enableSorting: false,
       },
     ],
-    [filteredMembers, selectedIds, allSelected, selectAll, clearSelection, toggleSelect, openMemberSheet, bulkApproveMembers],
+    [
+      filteredMembers,
+      selectedIds,
+      allSelected,
+      selectAll,
+      clearSelection,
+      toggleSelect,
+      openMemberSheet,
+      approveMember,
+    ],
   );
+
+  const handleBulkApprove = () => {
+    for (const id of selectedIds) {
+      approveMember.mutate({ id });
+    }
+    clearSelection();
+  };
 
   return (
     <>
       <BulkActionBar count={selectedIds.length} onClear={clearSelection}>
-        <Button
-          size="sm"
-          onClick={() => {
-            const count = selectedIds.length;
-            bulkApproveMembers(selectedIds);
-            toast.success(`Approved ${count} member(s)`);
-          }}
-        >
+        <Button size="sm" onClick={handleBulkApprove} disabled={approveMember.isPending}>
           Approve all
         </Button>
         <ExportButton

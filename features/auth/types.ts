@@ -8,6 +8,9 @@ export interface AdminUser {
 export interface AuthState {
   user: AdminUser | null;
   isAuthenticated: boolean;
-  login: (email: string) => void;
-  logout: () => void;
+  isLoading: boolean;
+  error: string | null;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
+  clearError: () => void;
 }

@@ -1,3 +1,4 @@
+import { MockDataBanner } from "@/shared/components/MockDataBanner";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 import { SectionLabel } from "@/shared/components/ui/SectionLabel";
 import { AnalyticsKPIRow } from "../components/AnalyticsKPIRow";
@@ -15,6 +16,7 @@ export default function AnalyticsPage() {
         title="Analytics"
         subtitle="Platform outcomes, growth, and revenue metrics"
       />
+      <MockDataBanner module="Analytics" apiSprint="tcs-api S20" />
       <div className="space-y-8">
         <DateRangePicker />
         <AnalyticsKPIRow />
@@ -28,7 +30,7 @@ export default function AnalyticsPage() {
           <TopEventsTable />
         </section>
         <section className="space-y-4">
-          <SectionLabel>Outcome Log</SectionLabel>
+          <SectionLabel>Outcome log</SectionLabel>
           <OutcomeLogTable />
         </section>
       </div>

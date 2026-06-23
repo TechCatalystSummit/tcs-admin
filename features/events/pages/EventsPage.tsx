@@ -1,12 +1,13 @@
 "use client";
 
-import Link from "next/link";
 import { ExportButton } from "@/shared/components/data-display/ExportButton";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 import { GradientButton } from "@/shared/components/ui/GradientButton";
+import { Spinner } from "@/shared/components/ui/SectionLabel";
+import Link from "next/link";
 import { EventFilters } from "../components/EventFilters";
 import { EventsTable } from "../components/EventsTable";
-import { useEventsStore } from "../store/useEventsStore";
+import { useFilteredEvents } from "../hooks/useFilteredEvents";
 
 const exportColumns = [
   { key: "title" as const, header: "Title" },
@@ -19,11 +20,8 @@ const exportColumns = [
 ];
 
 export default function EventsPage() {
-  useEventsStore((s) => s.filters);
-  useEventsStore((s) => s.events);
-  const getFilteredEvents = useEventsStore((s) => s.getFilteredEvents);
-  const filteredEvents = getFilteredEvents();
-  const exportData = filteredEvents.map((e) => ({
+  const { events, isLoading } = useFilteredEvents();
+  const exportData = events.map((e) => ({
     title: e.title,
     date: e.startDate,
     type: e.type,
@@ -48,7 +46,13 @@ export default function EventsPage() {
         }
       />
       <EventFilters />
-      <EventsTable />
+      {isLoading ? (
+        <div className="flex justify-center py-12">
+          <Spinner className="h-8 w-8" />
+        </div>
+      ) : (
+        <EventsTable />
+      )}
     </>
   );
 }

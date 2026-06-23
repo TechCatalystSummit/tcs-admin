@@ -1,5 +1,6 @@
 "use client";
 
+import { MockDataBanner } from "@/shared/components/MockDataBanner";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 import { SectionLabel } from "@/shared/components/ui/SectionLabel";
 import Link from "next/link";
@@ -20,6 +21,7 @@ export default function OutreachPage() {
         title="Outreach Command Center"
         subtitle="Quick send, stats, and active sequences"
       />
+      <MockDataBanner module="Outreach" apiSprint="tcs-api S18–S19" />
       <div className="space-y-8">
         <QuickSendCard />
         <OutreachStatsStrip />
@@ -28,16 +30,12 @@ export default function OutreachPage() {
           <div className="flex items-center justify-between">
             <SectionLabel>Active Sequences</SectionLabel>
             <Link href="/outreach/sequences" className="text-xs text-blue1 hover:underline">
-              View all
+              View all sequences
             </Link>
           </div>
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {activeSequences.map((seq) => (
-              <SequenceCard
-                key={seq.id}
-                sequence={seq}
-                onToggle={() => toggleSequence(seq.id)}
-              />
+              <SequenceCard key={seq.id} sequence={seq} onToggle={() => toggleSequence(seq.id)} />
             ))}
           </div>
         </section>

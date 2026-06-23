@@ -3,10 +3,12 @@
 import { ExportButton } from "@/shared/components/data-display/ExportButton";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 import { GradientButton } from "@/shared/components/ui/GradientButton";
+import { Spinner } from "@/shared/components/ui/SectionLabel";
 import { CreateIntroModal } from "../components/CreateIntroModal";
 import { IntroDetailModal } from "../components/IntroDetailModal";
 import { IntroFilters } from "../components/IntroFilters";
 import { IntrosTable } from "../components/IntrosTable";
+import { useFilteredIntros } from "../hooks/useFilteredIntros";
 import { useIntrosStore } from "../store/useIntrosStore";
 
 const exportColumns = [
@@ -20,11 +22,8 @@ const exportColumns = [
 
 export default function IntrosPage() {
   const openCreateModal = useIntrosStore((s) => s.openCreateModal);
-  useIntrosStore((s) => s.filters);
-  useIntrosStore((s) => s.intros);
-  const getFilteredIntros = useIntrosStore((s) => s.getFilteredIntros);
-  const filteredIntros = getFilteredIntros();
-  const exportData = filteredIntros.map((i) => ({
+  const { intros, isLoading } = useFilteredIntros();
+  const exportData = intros.map((i) => ({
     fromMemberName: i.fromMember.name,
     toMemberName: i.toMember.name,
     reason: i.reason,
@@ -46,7 +45,13 @@ export default function IntrosPage() {
         }
       />
       <IntroFilters />
-      <IntrosTable />
+      {isLoading ? (
+        <div className="flex justify-center py-12">
+          <Spinner className="h-8 w-8" />
+        </div>
+      ) : (
+        <IntrosTable />
+      )}
       <IntroDetailModal />
       <CreateIntroModal />
     </>

@@ -2,13 +2,9 @@
 
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
-import { mockApprovals } from "../data/mockApprovals";
-import { mockMembers } from "../data/mockMembers";
 import type { AdminMember, ApprovalRequest, MemberFilters } from "../types";
 
 interface MembersState {
-  members: AdminMember[];
-  approvals: ApprovalRequest[];
   filters: MemberFilters;
   selectedIds: string[];
   sheetMemberId: string | null;
@@ -21,27 +17,19 @@ interface MembersState {
   toggleSelect: (id: string) => void;
   selectAll: (ids: string[]) => void;
   clearSelection: () => void;
-  approveMember: (id: string) => void;
-  declineMember: (id: string) => void;
-  bulkApproveMembers: (ids: string[]) => void;
-  updateMember: (id: string, updates: Partial<Pick<AdminMember, "tier" | "status" | "adminNotes">>) => void;
-  getMemberById: (id: string) => AdminMember | undefined;
-  approveApproval: (id: string) => void;
-  declineApproval: (id: string) => void;
-  getFilteredMembers: () => AdminMember[];
-  getFilteredApprovals: () => ApprovalRequest[];
+  filterMembers: (members: AdminMember[]) => AdminMember[];
+  filterApprovals: (approvals: ApprovalRequest[]) => ApprovalRequest[];
 }
 
 const defaultFilters: MemberFilters = { tier: "", role: "", status: "", search: "" };
 
 export const useMembersStore = create<MembersState>()(
   immer((set, get) => ({
-    members: mockMembers,
-    approvals: mockApprovals,
     filters: defaultFilters,
     selectedIds: [],
     sheetMemberId: null,
     approvalTab: "all",
+
     setFilter: (key, value) =>
       set((state) => {
         state.filters[key] = value;
@@ -58,42 +46,9 @@ export const useMembersStore = create<MembersState>()(
       }),
     selectAll: (ids) => set((state) => { state.selectedIds = ids; }),
     clearSelection: () => set((state) => { state.selectedIds = []; }),
-    approveMember: (id) =>
-      set((state) => {
-        const m = state.members.find((x) => x.id === id);
-        if (m) m.status = "active";
-      }),
-    declineMember: (id) =>
-      set((state) => {
-        const m = state.members.find((x) => x.id === id);
-        if (m) m.status = "declined";
-      }),
-    bulkApproveMembers: (ids) =>
-      set((state) => {
-        for (const id of ids) {
-          const m = state.members.find((x) => x.id === id);
-          if (m) m.status = "active";
-        }
-        state.selectedIds = [];
-      }),
-    updateMember: (id, updates) =>
-      set((state) => {
-        const m = state.members.find((x) => x.id === id);
-        if (m) Object.assign(m, updates);
-      }),
-    getMemberById: (id) => get().members.find((m) => m.id === id),
-    approveApproval: (id) =>
-      set((state) => {
-        const a = state.approvals.find((x) => x.id === id);
-        if (a) a.status = "approved";
-      }),
-    declineApproval: (id) =>
-      set((state) => {
-        const a = state.approvals.find((x) => x.id === id);
-        if (a) a.status = "declined";
-      }),
-    getFilteredMembers: () => {
-      const { members, filters } = get();
+
+    filterMembers: (members) => {
+      const { filters } = get();
       return members.filter((m) => {
         if (filters.tier && m.tier !== filters.tier) return false;
         if (filters.role && m.role !== filters.role) return false;
@@ -109,8 +64,9 @@ export const useMembersStore = create<MembersState>()(
         return true;
       });
     },
-    getFilteredApprovals: () => {
-      const { approvals, approvalTab } = get();
+
+    filterApprovals: (approvals) => {
+      const { approvalTab } = get();
       if (approvalTab === "all") return approvals;
       return approvals.filter((a) => a.status === approvalTab);
     },

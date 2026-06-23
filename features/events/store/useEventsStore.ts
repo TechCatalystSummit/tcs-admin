@@ -2,18 +2,13 @@
 
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
-import { mockEvents } from "../data/mockEvents";
-import type { Event, EventFilters, EventFormData } from "../types";
+import type { Event, EventFilters } from "../types";
 
 interface EventsState {
-  events: Event[];
   filters: EventFilters;
   setFilter: (key: keyof EventFilters, value: string) => void;
   clearFilters: () => void;
-  getFilteredEvents: () => Event[];
-  getEventById: (id: string) => Event | undefined;
-  addEvent: (data: EventFormData) => Event;
-  updateEventStatus: (id: string, status: Event["status"]) => void;
+  filterEvents: (events: Event[]) => Event[];
 }
 
 const defaultFilters: EventFilters = {
@@ -24,17 +19,8 @@ const defaultFilters: EventFilters = {
   search: "",
 };
 
-function nextEventId(events: Event[]): string {
-  const nums = events
-    .map((e) => parseInt(e.id.replace("evt_", ""), 10))
-    .filter((n) => !Number.isNaN(n));
-  const next = nums.length ? Math.max(...nums) + 1 : 1;
-  return `evt_${String(next).padStart(3, "0")}`;
-}
-
 export const useEventsStore = create<EventsState>()(
   immer((set, get) => ({
-    events: mockEvents,
     filters: defaultFilters,
     setFilter: (key, value) =>
       set((state) => {
@@ -44,8 +30,8 @@ export const useEventsStore = create<EventsState>()(
       set((state) => {
         state.filters = defaultFilters;
       }),
-    getFilteredEvents: () => {
-      const { events, filters } = get();
+    filterEvents: (events) => {
+      const { filters } = get();
       return events.filter((event) => {
         if (filters.status && event.status !== filters.status) return false;
         if (filters.type && event.type !== filters.type) return false;
@@ -62,38 +48,5 @@ export const useEventsStore = create<EventsState>()(
         return true;
       });
     },
-    getEventById: (id) => get().events.find((e) => e.id === id),
-    addEvent: (data) => {
-      const id = nextEventId(get().events);
-      const newEvent: Event = {
-        id,
-        title: data.title,
-        description: data.description,
-        type: data.type,
-        status: data.status,
-        location: data.location,
-        venue: data.venue,
-        startDate: data.startDate,
-        endDate: data.endDate,
-        capacity: data.capacity,
-        rsvpCount: 0,
-        checkedInCount: 0,
-        vipCount: 0,
-        noShowCount: 0,
-        sponsors: [],
-        speakers: data.speakers.filter((s) => s.name.trim()),
-        agenda: data.agenda.filter((a) => a.title.trim()),
-        attendees: [],
-      };
-      set((state) => {
-        state.events.unshift(newEvent);
-      });
-      return newEvent;
-    },
-    updateEventStatus: (id, status) =>
-      set((state) => {
-        const event = state.events.find((e) => e.id === id);
-        if (event) event.status = status;
-      }),
   })),
 );

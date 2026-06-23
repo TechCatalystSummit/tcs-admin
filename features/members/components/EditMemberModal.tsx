@@ -11,10 +11,10 @@ import {
 import { Textarea } from "@/shared/components/ui/Textarea";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { toast } from "sonner";
 import { z } from "zod";
+import { useUpdateMember } from "../api/mutations";
+import { useMember } from "../api/queries";
 import type { MemberStatus, MemberTier } from "../types";
-import { useMembersStore } from "../store/useMembersStore";
 
 const editMemberSchema = z.object({
   tier: z.enum(["community", "builder", "executive", "partner", "legacy"]),
@@ -31,9 +31,8 @@ interface EditMemberModalProps {
 }
 
 export function EditMemberModal({ memberId, open, onClose }: EditMemberModalProps) {
-  const getMemberById = useMembersStore((s) => s.getMemberById);
-  const updateMember = useMembersStore((s) => s.updateMember);
-  const member = memberId ? getMemberById(memberId) : undefined;
+  const { data: member } = useMember(memberId);
+  const updateMember = useUpdateMember();
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm<EditMemberValues>({
     resolver: zodResolver(editMemberSchema),
@@ -48,14 +47,20 @@ export function EditMemberModal({ memberId, open, onClose }: EditMemberModalProp
 
   const onSubmit = (data: EditMemberValues) => {
     if (!memberId) return;
-    updateMember(memberId, {
-      tier: data.tier as MemberTier,
-      status: data.status as MemberStatus,
-      adminNotes: data.adminNotes,
-    });
-    toast.success("Member updated");
-    reset();
-    onClose();
+    updateMember.mutate(
+      {
+        id: memberId,
+        tier: data.tier as MemberTier,
+        status: data.status as MemberStatus,
+        adminNotes: data.adminNotes,
+      },
+      {
+        onSuccess: () => {
+          reset();
+          onClose();
+        },
+      },
+    );
   };
 
   return (
@@ -103,7 +108,7 @@ export function EditMemberModal({ memberId, open, onClose }: EditMemberModalProp
 
             <div className="flex justify-end gap-2 pt-2">
               <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-              <Button type="submit">Save changes</Button>
+              <Button type="submit" disabled={updateMember.isPending}>Save changes</Button>
             </div>
           </form>
         )}

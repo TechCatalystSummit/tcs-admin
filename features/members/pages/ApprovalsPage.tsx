@@ -1,15 +1,13 @@
 "use client";
 
 import { PageHeader } from "@/shared/components/layout/PageHeader";
+import { Spinner } from "@/shared/components/ui/SectionLabel";
 import { ApprovalCard } from "../components/ApprovalCard";
 import { ApprovalFilterTabs } from "../components/ApprovalFilterTabs";
-import { useMembersStore } from "../store/useMembersStore";
+import { useFilteredApprovals } from "../hooks/useFilteredApprovals";
 
 export default function ApprovalsPage() {
-  useMembersStore((s) => s.approvalTab);
-  useMembersStore((s) => s.approvals);
-  const getFilteredApprovals = useMembersStore((s) => s.getFilteredApprovals);
-  const filteredApprovals = getFilteredApprovals();
+  const { approvals, isLoading } = useFilteredApprovals();
 
   return (
     <>
@@ -20,11 +18,17 @@ export default function ApprovalsPage() {
       <div className="mb-6">
         <ApprovalFilterTabs />
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-        {filteredApprovals.map((approval) => (
-          <ApprovalCard key={approval.id} approval={approval} />
-        ))}
-      </div>
+      {isLoading ? (
+        <div className="flex justify-center py-12">
+          <Spinner className="h-8 w-8" />
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          {approvals.map((approval) => (
+            <ApprovalCard key={approval.id} approval={approval} />
+          ))}
+        </div>
+      )}
     </>
   );
 }

@@ -3,13 +3,14 @@
 import { ExportButton } from "@/shared/components/data-display/ExportButton";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 import { SectionLabel } from "@/shared/components/ui/SectionLabel";
+import { Spinner } from "@/shared/components/ui/SectionLabel";
 import { GenerateQRModal } from "../components/GenerateQRModal";
 import { OpenGenerateButton } from "../components/OpenGenerateButton";
 import { QRAnalyticsChart } from "../components/QRAnalyticsChart";
 import { QRCodeDisplayPanel } from "../components/QRCodeDisplayPanel";
 import { QRCodesTable } from "../components/QRCodesTable";
 import { ScanLogPanel } from "../components/ScanLogPanel";
-import { useQRStore } from "../store/useQRStore";
+import { useQRCodesList } from "../api/queries";
 import { QR_TYPE_LABELS } from "../types";
 
 const exportColumns = [
@@ -23,7 +24,8 @@ const exportColumns = [
 ];
 
 export default function QRCodesPage() {
-  const codes = useQRStore((s) => s.codes);
+  const { data, isLoading } = useQRCodesList();
+  const codes = data?.codes ?? [];
   const exportData = codes.map((c) => ({
     name: c.name,
     type: QR_TYPE_LABELS[c.type],
@@ -47,19 +49,27 @@ export default function QRCodesPage() {
         }
       />
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
-        <div className="xl:col-span-2">
-          <QRAnalyticsChart />
+      {isLoading ? (
+        <div className="flex justify-center py-12">
+          <Spinner className="h-8 w-8" />
         </div>
-        <QRCodeDisplayPanel />
-      </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
+            <div className="xl:col-span-2">
+              <QRAnalyticsChart codes={codes} />
+            </div>
+            <QRCodeDisplayPanel codes={codes} />
+          </div>
 
-      <SectionLabel className="mb-3">All QR codes</SectionLabel>
-      <QRCodesTable />
+          <SectionLabel className="mb-3">All QR codes</SectionLabel>
+          <QRCodesTable codes={codes} />
 
-      <div className="mt-10">
-        <ScanLogPanel />
-      </div>
+          <div className="mt-10">
+            <ScanLogPanel codes={codes} />
+          </div>
+        </>
+      )}
 
       <GenerateQRModal />
     </>

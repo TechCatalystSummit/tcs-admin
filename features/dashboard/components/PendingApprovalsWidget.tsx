@@ -2,17 +2,15 @@
 
 import { Card, CardContent, CardHeader } from "@/shared/components/ui/Card";
 import { SectionLabel } from "@/shared/components/ui/SectionLabel";
-import { useDashboardStore } from "../store/useDashboardStore";
+import { useDashboardData } from "../api/queries";
 import { Button } from "@/shared/components/ui/Button";
 import { Badge } from "@/shared/components/ui/Badge";
+import { Spinner } from "@/shared/components/ui/SectionLabel";
 import { formatTier } from "@/shared/utils/formatters";
 import Link from "next/link";
-import { toast } from "sonner";
 
 export function PendingApprovalsWidget() {
-  const pending = useDashboardStore((s) => s.pendingApprovals);
-  const approve = useDashboardStore((s) => s.approvePending);
-  const decline = useDashboardStore((s) => s.declinePending);
+  const { pendingApprovals, isLoading, approvePending, declinePending } = useDashboardData();
 
   return (
     <Card>
@@ -23,37 +21,27 @@ export function PendingApprovalsWidget() {
         </Link>
       </CardHeader>
       <CardContent className="space-y-3">
-        {pending.map((item) => (
-          <div key={item.id} className="flex items-center justify-between gap-3 py-2 border-b border-border last:border-0">
-            <div className="min-w-0">
-              <p className="text-sm font-semibold text-ink truncate">{item.name}</p>
-              <p className="text-xs text-muted truncate">{item.company}</p>
-              <Badge variant="tier" className="mt-1">{formatTier(item.tier)}</Badge>
+        {isLoading ? (
+          <Spinner className="h-6 w-6" />
+        ) : (
+          pendingApprovals.map((item) => (
+            <div key={item.id} className="flex items-center justify-between gap-3 py-2 border-b border-border last:border-0">
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-ink truncate">{item.name}</p>
+                <p className="text-xs text-muted truncate">{item.company}</p>
+                <Badge variant="tier" className="mt-1">{formatTier(item.tier)}</Badge>
+              </div>
+              <div className="flex gap-1 shrink-0">
+                <Button size="sm" variant="outline" onClick={() => approvePending(item.id)}>
+                  Approve
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => declinePending(item.id)}>
+                  Decline
+                </Button>
+              </div>
             </div>
-            <div className="flex gap-1 shrink-0">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => {
-                  approve(item.id);
-                  toast.success(`${item.name} approved`);
-                }}
-              >
-                Approve
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => {
-                  decline(item.id);
-                  toast.error(`${item.name} declined`);
-                }}
-              >
-                Decline
-              </Button>
-            </div>
-          </div>
-        ))}
+          ))
+        )}
       </CardContent>
     </Card>
   );

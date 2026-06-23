@@ -1,22 +1,22 @@
 "use client";
 
+import type { QRCode } from "../types";
+import { Card, CardContent, CardHeader } from "@/shared/components/ui/Card";
 import { SectionLabel } from "@/shared/components/ui/SectionLabel";
-import { useQRStore } from "../store/useQRStore";
-import { ScanLogTable } from "./ScanLogTable";
 
-export function ScanLogPanel() {
-  const selectedCodeId = useQRStore((s) => s.selectedCodeId);
-  const getScansForCode = useQRStore((s) => s.getScansForCode);
-  const codes = useQRStore((s) => s.codes);
-  const selected = codes.find((c) => c.id === selectedCodeId);
-  const scans = selectedCodeId ? getScansForCode(selectedCodeId) : [];
-
+export function ScanLogPanel({ codes }: { codes: QRCode[] }) {
   return (
-    <section className="space-y-4">
-      <SectionLabel>
-        Scan log{selected ? ` — ${selected.name}` : ""}
-      </SectionLabel>
-      <ScanLogTable scans={scans} />
-    </section>
+    <Card>
+      <CardHeader>
+        <SectionLabel>Recent scans</SectionLabel>
+      </CardHeader>
+      <CardContent>
+        <p className="text-sm text-muted">
+          {codes.length
+            ? `${codes.reduce((sum, c) => sum + c.scans, 0)} total scans across ${codes.length} codes`
+            : "No scan data yet"}
+        </p>
+      </CardContent>
+    </Card>
   );
 }

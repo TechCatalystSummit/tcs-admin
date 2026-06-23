@@ -2,10 +2,11 @@
 
 import { ExportButton } from "@/shared/components/data-display/ExportButton";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
+import { Spinner } from "@/shared/components/ui/SectionLabel";
 import { MemberDetailSheet } from "../components/MemberDetailSheet";
 import { MemberFilters } from "../components/MemberFilters";
 import { MembersTable } from "../components/MembersTable";
-import { useMembersStore } from "../store/useMembersStore";
+import { useFilteredMembers } from "../hooks/useFilteredMembers";
 
 const exportColumns = [
   { key: "name" as const, header: "Name" },
@@ -19,10 +20,7 @@ const exportColumns = [
 ];
 
 export default function MembersPage() {
-  useMembersStore((s) => s.filters);
-  useMembersStore((s) => s.members);
-  const getFilteredMembers = useMembersStore((s) => s.getFilteredMembers);
-  const filteredMembers = getFilteredMembers();
+  const { members, isLoading } = useFilteredMembers();
 
   return (
     <>
@@ -31,14 +29,20 @@ export default function MembersPage() {
         subtitle="Manage all platform members"
         action={
           <ExportButton
-            data={filteredMembers}
+            data={members}
             filename="tcs-members"
             columns={exportColumns}
           />
         }
       />
       <MemberFilters />
-      <MembersTable />
+      {isLoading ? (
+        <div className="flex justify-center py-12">
+          <Spinner className="h-8 w-8" />
+        </div>
+      ) : (
+        <MembersTable />
+      )}
       <MemberDetailSheet />
     </>
   );

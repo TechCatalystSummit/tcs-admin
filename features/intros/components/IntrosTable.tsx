@@ -6,16 +6,14 @@ import { Button } from "@/shared/components/ui/Button";
 import { formatDate } from "@/shared/utils/formatters";
 import { type ColumnDef } from "@tanstack/react-table";
 import { useMemo } from "react";
+import { useFilteredIntros } from "../hooks/useFilteredIntros";
 import { useIntrosStore } from "../store/useIntrosStore";
 import { INTRO_REASON_LABELS, type IntroRequest } from "../types";
 import { IntroStatusBadge } from "./IntroStatusBadge";
 
 export function IntrosTable() {
-  useIntrosStore((s) => s.filters);
-  useIntrosStore((s) => s.intros);
-  const getFilteredIntros = useIntrosStore((s) => s.getFilteredIntros);
+  const { intros: filteredIntros } = useFilteredIntros();
   const openDetail = useIntrosStore((s) => s.openDetail);
-  const filteredIntros = getFilteredIntros();
 
   const columns = useMemo<ColumnDef<IntroRequest>[]>(
     () => [

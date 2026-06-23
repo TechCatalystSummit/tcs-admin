@@ -2,14 +2,16 @@
 
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 import { GradientButton } from "@/shared/components/ui/GradientButton";
+import { Spinner } from "@/shared/components/ui/SectionLabel";
 import { useState } from "react";
-import { AdminNotesPanel, MemberProfilePanel } from "../components/MemberProfilePanel";
+import { AdminNotesPanel } from "../components/AdminNotesPanel";
+import { MemberProfilePanel } from "../components/MemberProfilePanel";
 import { EditMemberModal } from "../components/EditMemberModal";
-import { useMembersStore } from "../store/useMembersStore";
+import { useMember } from "../api/queries";
 
 export default function MemberDetailPage({ memberId }: { memberId: string }) {
   const [editOpen, setEditOpen] = useState(false);
-  const member = useMembersStore((s) => s.getMemberById(memberId));
+  const { data: member, isLoading } = useMember(memberId);
 
   return (
     <>
@@ -22,17 +24,23 @@ export default function MemberDetailPage({ memberId }: { memberId: string }) {
           ) : undefined
         }
       />
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <MemberProfilePanel memberId={memberId} onEdit={() => setEditOpen(true)} />
+      {isLoading ? (
+        <div className="flex justify-center py-12">
+          <Spinner className="h-8 w-8" />
         </div>
-        <div>
-          <AdminNotesPanel
-            key={`${memberId}-${member?.adminNotes ?? ""}`}
-            memberId={memberId}
-          />
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <MemberProfilePanel memberId={memberId} onEdit={() => setEditOpen(true)} />
+          </div>
+          <div>
+            <AdminNotesPanel
+              key={`${memberId}-${member?.adminNotes ?? ""}`}
+              memberId={memberId}
+            />
+          </div>
         </div>
-      </div>
+      )}
       <EditMemberModal
         memberId={memberId}
         open={editOpen}

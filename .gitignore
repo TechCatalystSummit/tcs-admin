@@ -12,6 +12,8 @@
 
 # testing
 /coverage
+/test-results/
+/playwright-report/
 
 # next.js
 /.next/
@@ -41,6 +43,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# local AI agent config (machine-specific)
+# local AI agent / editor config (machine-specific)
+.cursor/
 CLAUDE.md
 AGENTS.md

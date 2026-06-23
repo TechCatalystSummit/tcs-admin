@@ -1,43 +1,30 @@
 "use client";
 
 import { DataTable } from "@/shared/components/data-display/DataTable";
-import { Badge } from "@/shared/components/ui/Badge";
 import { Button } from "@/shared/components/ui/Button";
-import { formatDate, formatPercent } from "@/shared/utils/formatters";
+import { formatDate } from "@/shared/utils/formatters";
 import { type ColumnDef } from "@tanstack/react-table";
 import { useMemo } from "react";
 import { useQRStore } from "../store/useQRStore";
 import type { QRCode } from "../types";
 import { QR_TYPE_LABELS } from "../types";
 
-export function QRCodesTable() {
-  const codes = useQRStore((s) => s.codes);
+export function QRCodesTable({ codes }: { codes: QRCode[] }) {
   const selectedCodeId = useQRStore((s) => s.selectedCodeId);
   const selectCode = useQRStore((s) => s.selectCode);
 
   const columns = useMemo<ColumnDef<QRCode>[]>(
     () => [
-      { accessorKey: "name", header: "Code Name" },
+      { accessorKey: "name", header: "Code" },
       {
         accessorKey: "type",
         header: "Type",
-        cell: ({ row }) => (
-          <Badge variant="gradient">{QR_TYPE_LABELS[row.original.type]}</Badge>
-        ),
+        cell: ({ row }) => QR_TYPE_LABELS[row.original.type],
       },
       { accessorKey: "source", header: "Source" },
       { accessorKey: "campaign", header: "Campaign" },
       { accessorKey: "scans", header: "Scans" },
-      {
-        id: "convRate",
-        header: "Conv. Rate",
-        cell: ({ row }) => {
-          const rate = row.original.scans > 0
-            ? row.original.conversions / row.original.scans
-            : 0;
-          return formatPercent(rate);
-        },
-      },
+      { accessorKey: "conversions", header: "Conversions" },
       {
         accessorKey: "createdAt",
         header: "Created",
@@ -52,7 +39,7 @@ export function QRCodesTable() {
             size="sm"
             onClick={() => selectCode(row.original.id)}
           >
-            {selectedCodeId === row.original.id ? "Selected" : "View"}
+            Select
           </Button>
         ),
         enableSorting: false,

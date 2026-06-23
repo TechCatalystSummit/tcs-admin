@@ -3,11 +3,12 @@
 import { ExportButton } from "@/shared/components/data-display/ExportButton";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 import { SectionLabel } from "@/shared/components/ui/SectionLabel";
+import { Spinner } from "@/shared/components/ui/SectionLabel";
+import { useDinnersList } from "../api/queries";
 import { AdjustCreditsModal } from "../components/AdjustCreditsModal";
 import { CreditLedger } from "../components/CreditLedger";
 import { DinnerDetailModal } from "../components/DinnerDetailModal";
 import { DinnersTable } from "../components/DinnersTable";
-import { useDinnersStore } from "../store/useDinnersStore";
 
 const exportColumns = [
   { key: "requesterName" as const, header: "Requester" },
@@ -20,7 +21,8 @@ const exportColumns = [
 ];
 
 export default function DinnersPage() {
-  const requests = useDinnersStore((s) => s.requests);
+  const { data, isLoading } = useDinnersList();
+  const requests = data?.requests ?? [];
   const exportData = requests.map((r) => ({
     requesterName: r.requesterName,
     requesterCompany: r.requesterCompany,
@@ -43,14 +45,20 @@ export default function DinnersPage() {
       <div className="space-y-10">
         <section className="space-y-4">
           <SectionLabel>Dinner requests</SectionLabel>
-          <DinnersTable />
+          {isLoading ? (
+            <div className="flex justify-center py-12">
+              <Spinner className="h-8 w-8" />
+            </div>
+          ) : (
+            <DinnersTable requests={requests} />
+          )}
         </section>
         <section className="space-y-4">
           <SectionLabel>Credit ledger</SectionLabel>
           <CreditLedger />
         </section>
       </div>
-      <DinnerDetailModal />
+      <DinnerDetailModal requests={requests} />
       <AdjustCreditsModal />
     </>
   );

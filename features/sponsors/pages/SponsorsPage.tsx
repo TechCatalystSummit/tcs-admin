@@ -3,9 +3,10 @@
 import { ExportButton } from "@/shared/components/data-display/ExportButton";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 import { GradientButton } from "@/shared/components/ui/GradientButton";
+import { Spinner } from "@/shared/components/ui/SectionLabel";
 import { SponsorFilters } from "../components/SponsorFilters";
 import { SponsorsTable } from "../components/SponsorsTable";
-import { useSponsorsStore } from "../store/useSponsorsStore";
+import { useFilteredSponsors } from "../hooks/useFilteredSponsors";
 
 const exportColumns = [
   { key: "name" as const, header: "Company" },
@@ -17,11 +18,8 @@ const exportColumns = [
 ];
 
 export default function SponsorsPage() {
-  useSponsorsStore((s) => s.filters);
-  useSponsorsStore((s) => s.sponsors);
-  const getFilteredSponsors = useSponsorsStore((s) => s.getFilteredSponsors);
-  const filteredSponsors = getFilteredSponsors();
-  const exportData = filteredSponsors.map((s) => ({
+  const { sponsors, isLoading } = useFilteredSponsors();
+  const exportData = sponsors.map((s) => ({
     name: s.name,
     tier: s.tier,
     eventsCount: s.eventsSponsored.length,
@@ -43,7 +41,13 @@ export default function SponsorsPage() {
         }
       />
       <SponsorFilters />
-      <SponsorsTable />
+      {isLoading ? (
+        <div className="flex justify-center py-12">
+          <Spinner className="h-8 w-8" />
+        </div>
+      ) : (
+        <SponsorsTable />
+      )}
     </>
   );
 }

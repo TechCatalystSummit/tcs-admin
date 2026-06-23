@@ -2,17 +2,15 @@
 
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
-import { mockPayments } from "../data/mockPayments";
 import type { Payment, PaymentFilters, RefundRequest } from "../types";
 
 interface PaymentsState {
-  payments: Payment[];
   filters: PaymentFilters;
   refundPaymentId: string | null;
   refundOpen: boolean;
   setFilter: (key: keyof PaymentFilters, value: string) => void;
   clearFilters: () => void;
-  getFilteredPayments: () => Payment[];
+  filterPayments: (payments: Payment[]) => Payment[];
   openRefund: (paymentId: string) => void;
   closeRefund: () => void;
   processRefund: (request: RefundRequest) => void;
@@ -28,7 +26,6 @@ const defaultFilters: PaymentFilters = {
 
 export const usePaymentsStore = create<PaymentsState>()(
   immer((set, get) => ({
-    payments: mockPayments,
     filters: defaultFilters,
     refundPaymentId: null,
     refundOpen: false,
@@ -37,8 +34,8 @@ export const usePaymentsStore = create<PaymentsState>()(
         state.filters[key] = value;
       }),
     clearFilters: () => set((state) => { state.filters = defaultFilters; }),
-    getFilteredPayments: () => {
-      const { payments, filters } = get();
+    filterPayments: (payments) => {
+      const { filters } = get();
       return payments.filter((p) => {
         if (filters.status && p.status !== filters.status) return false;
         if (filters.tier && p.tier !== filters.tier) return false;
@@ -65,12 +62,8 @@ export const usePaymentsStore = create<PaymentsState>()(
         state.refundOpen = false;
         state.refundPaymentId = null;
       }),
-    processRefund: (request) =>
+    processRefund: () =>
       set((state) => {
-        const payment = state.payments.find((p) => p.id === request.paymentId);
-        if (payment && payment.status === "paid") {
-          payment.status = "refunded";
-        }
         state.refundOpen = false;
         state.refundPaymentId = null;
       }),

@@ -2,17 +2,10 @@
 
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
-import { mockCreditLedger, mockDinnerRequests } from "../data/mockDinners";
-import type {
-  CreditAdjustReason,
-  CreditAdjustment,
-  CreditRecord,
-  DinnerRequest,
-  DinnerStatus,
-} from "../types";
+import { mockCreditLedger } from "../data/mockDinners";
+import type { CreditAdjustReason, CreditAdjustment, CreditRecord } from "../types";
 
 interface DinnersState {
-  requests: DinnerRequest[];
   credits: CreditRecord[];
   adjustments: CreditAdjustment[];
   selectedRequestId: string | null;
@@ -21,12 +14,6 @@ interface DinnersState {
   adjustOpen: boolean;
   openDetail: (id: string) => void;
   closeDetail: () => void;
-  setRequestStatus: (id: string, status: DinnerStatus) => void;
-  approveRequest: (id: string) => void;
-  scheduleRequest: (id: string, scheduledDate?: string) => void;
-  completeRequest: (id: string) => void;
-  logOutcome: (id: string, outcome: string) => void;
-  appendAdminNote: (id: string, note: string) => void;
   openAdjust: (memberId: string) => void;
   closeAdjust: () => void;
   adjustCredits: (
@@ -39,7 +26,6 @@ interface DinnersState {
 
 export const useDinnersStore = create<DinnersState>()(
   immer((set) => ({
-    requests: mockDinnerRequests,
     credits: mockCreditLedger,
     adjustments: [],
     selectedRequestId: null,
@@ -55,47 +41,6 @@ export const useDinnersStore = create<DinnersState>()(
       set((state) => {
         state.detailOpen = false;
         state.selectedRequestId = null;
-      }),
-    setRequestStatus: (id, status) =>
-      set((state) => {
-        const req = state.requests.find((r) => r.id === id);
-        if (req) req.status = status;
-      }),
-    approveRequest: (id) =>
-      set((state) => {
-        const req = state.requests.find((r) => r.id === id);
-        if (req && (req.status === "requested" || req.status === "under_review")) {
-          req.status = "approved";
-        }
-      }),
-    scheduleRequest: (id, scheduledDate) =>
-      set((state) => {
-        const req = state.requests.find((r) => r.id === id);
-        if (req && req.status === "approved") {
-          req.status = "scheduled";
-          req.scheduledDate = scheduledDate ?? req.preferredDate;
-          if (req.creditsUsed === 0) req.creditsUsed = 1;
-        }
-      }),
-    completeRequest: (id) =>
-      set((state) => {
-        const req = state.requests.find((r) => r.id === id);
-        if (req && req.status === "scheduled") {
-          req.status = "completed";
-          if (req.creditsUsed < 2) req.creditsUsed = 2;
-        }
-      }),
-    logOutcome: (id, outcome) =>
-      set((state) => {
-        const req = state.requests.find((r) => r.id === id);
-        if (req) req.outcome = outcome;
-      }),
-    appendAdminNote: (id, note) =>
-      set((state) => {
-        const req = state.requests.find((r) => r.id === id);
-        if (req) {
-          req.adminNotes = req.adminNotes ? `${req.adminNotes}\n${note}` : note;
-        }
       }),
     openAdjust: (memberId) =>
       set((state) => {

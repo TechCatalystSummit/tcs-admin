@@ -6,15 +6,12 @@ import { Button } from "@/shared/components/ui/Button";
 import { type ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
 import { useMemo } from "react";
-import { useSponsorsStore } from "../store/useSponsorsStore";
+import { useFilteredSponsors } from "../hooks/useFilteredSponsors";
 import type { Sponsor } from "../types";
 import { SponsorStatusBadge, SponsorTierBadge } from "./SponsorStatusBadge";
 
 export function SponsorsTable() {
-  useSponsorsStore((s) => s.filters);
-  useSponsorsStore((s) => s.sponsors);
-  const getFilteredSponsors = useSponsorsStore((s) => s.getFilteredSponsors);
-  const filteredSponsors = getFilteredSponsors();
+  const { sponsors: filteredSponsors } = useFilteredSponsors();
 
   const columns = useMemo<ColumnDef<Sponsor>[]>(
     () => [

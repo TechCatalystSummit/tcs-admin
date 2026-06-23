@@ -3,11 +3,12 @@
 import { ExportButton } from "@/shared/components/data-display/ExportButton";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 import { SectionLabel } from "@/shared/components/ui/SectionLabel";
+import { Spinner } from "@/shared/components/ui/SectionLabel";
 import { PaymentFilters } from "../components/PaymentFilters";
 import { PaymentsTable } from "../components/PaymentsTable";
 import { RefundModal } from "../components/RefundModal";
 import { TierPricingTable } from "../components/TierPricingTable";
-import { usePaymentsStore } from "../store/usePaymentsStore";
+import { useFilteredPayments } from "../hooks/useFilteredPayments";
 
 const exportColumns = [
   { key: "memberName" as const, header: "Member" },
@@ -19,11 +20,8 @@ const exportColumns = [
 ];
 
 export default function PaymentsPage() {
-  usePaymentsStore((s) => s.filters);
-  usePaymentsStore((s) => s.payments);
-  const getFilteredPayments = usePaymentsStore((s) => s.getFilteredPayments);
-  const filteredPayments = getFilteredPayments();
-  const exportData = filteredPayments.map((p) => ({
+  const { payments, isLoading } = useFilteredPayments();
+  const exportData = payments.map((p) => ({
     memberName: p.memberName,
     amount: p.amount,
     tier: p.tier,
@@ -45,7 +43,13 @@ export default function PaymentsPage() {
       <section className="mb-10 space-y-4">
         <SectionLabel>Payment history</SectionLabel>
         <PaymentFilters />
-        <PaymentsTable />
+        {isLoading ? (
+          <div className="flex justify-center py-12">
+            <Spinner className="h-8 w-8" />
+          </div>
+        ) : (
+          <PaymentsTable payments={payments} />
+        )}
       </section>
 
       <section className="space-y-4">
@@ -53,7 +57,7 @@ export default function PaymentsPage() {
         <TierPricingTable />
       </section>
 
-      <RefundModal />
+      <RefundModal payments={payments} />
     </>
   );
 }

@@ -13,11 +13,11 @@ import { Textarea } from "@/shared/components/ui/Textarea";
 import { formatCurrency } from "@/shared/utils/formatters";
 import { useState } from "react";
 import { usePaymentsStore } from "../store/usePaymentsStore";
+import type { Payment } from "../types";
 
-export function RefundModal() {
+export function RefundModal({ payments }: { payments: Payment[] }) {
   const open = usePaymentsStore((s) => s.refundOpen);
   const refundPaymentId = usePaymentsStore((s) => s.refundPaymentId);
-  const payments = usePaymentsStore((s) => s.payments);
   const closeRefund = usePaymentsStore((s) => s.closeRefund);
   const processRefund = usePaymentsStore((s) => s.processRefund);
 
@@ -74,7 +74,7 @@ export function RefundModal() {
                 required
               />
               <p className="text-xs text-muted">
-                Phase 1: This confirms the refund in the admin UI only. No payment processor action is taken.
+                Refund processing via Stripe is not yet wired in the admin UI.
               </p>
               <div className="flex gap-2 pt-2">
                 <Button type="submit" variant="danger" size="sm" disabled={!reason.trim()}>

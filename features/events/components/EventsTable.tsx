@@ -6,15 +6,12 @@ import { formatDate } from "@/shared/utils/formatters";
 import { type ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
 import { useMemo } from "react";
-import { useEventsStore } from "../store/useEventsStore";
+import { useFilteredEvents } from "../hooks/useFilteredEvents";
 import type { Event } from "../types";
 import { EventStatusBadge } from "./EventStatusBadge";
 
 export function EventsTable() {
-  useEventsStore((s) => s.filters);
-  useEventsStore((s) => s.events);
-  const getFilteredEvents = useEventsStore((s) => s.getFilteredEvents);
-  const filteredEvents = getFilteredEvents();
+  const { events: filteredEvents } = useFilteredEvents();
 
   const columns = useMemo<ColumnDef<Event>[]>(
     () => [
