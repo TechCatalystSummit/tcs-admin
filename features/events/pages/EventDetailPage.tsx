@@ -6,16 +6,17 @@ import { SectionLabel } from "@/shared/components/ui/SectionLabel";
 import { Spinner } from "@/shared/components/ui/SectionLabel";
 import { formatDate } from "@/shared/utils/formatters";
 import { useRouter } from "next/navigation";
+import { useEvent, useEventAttendees } from "../api/queries";
 import { AttendeeTable } from "../components/AttendeeTable";
+import { EventDetailActions } from "../components/EventDetailActions";
 import { EventQRCard } from "../components/EventQRCard";
 import { EventSpeakers } from "../components/EventSpeakers";
 import { EventStatsRow } from "../components/EventStatsRow";
-import { EventStatusBadge } from "../components/EventStatusBadge";
-import { useEvent } from "../api/queries";
 
 export default function EventDetailPage({ eventId }: { eventId: string }) {
   const router = useRouter();
   const { data: event, isLoading } = useEvent(eventId);
+  const { data: attendeesData, isLoading: attendeesLoading } = useEventAttendees(eventId);
 
   if (isLoading) {
     return (
@@ -39,12 +40,14 @@ export default function EventDetailPage({ eventId }: { eventId: string }) {
     );
   }
 
+  const attendees = attendeesData?.attendees ?? [];
+
   return (
     <>
       <PageHeader
         title={event.title}
         subtitle={`${formatDate(event.startDate)} · ${event.location}`}
-        action={<EventStatusBadge status={event.status} />}
+        action={<EventDetailActions eventId={event.id} status={event.status} />}
       />
 
       <EventStatsRow event={event} />
@@ -87,7 +90,13 @@ export default function EventDetailPage({ eventId }: { eventId: string }) {
       </div>
 
       <SectionLabel className="mb-3">Attendees</SectionLabel>
-      <AttendeeTable attendees={event.attendees} />
+      {attendeesLoading ? (
+        <div className="flex justify-center py-8">
+          <Spinner className="h-6 w-6" />
+        </div>
+      ) : (
+        <AttendeeTable attendees={attendees} />
+      )}
     </>
   );
 }

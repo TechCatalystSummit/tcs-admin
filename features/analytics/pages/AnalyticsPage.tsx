@@ -31,6 +31,7 @@ export default function AnalyticsPage() {
         </section>
         <section className="space-y-4">
           <SectionLabel>Outcome log</SectionLabel>
+          <p className="text-xs text-muted">Live from GET /api/outcomes</p>
           <OutcomeLogTable />
         </section>
       </div>

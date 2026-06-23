@@ -11,9 +11,11 @@ import {
 import { Input } from "@/shared/components/ui/Input";
 import { Textarea } from "@/shared/components/ui/Textarea";
 import { cn } from "@/shared/utils/cn";
+import { useMembersList } from "@/features/members/api/queries";
 import { useState } from "react";
+import { useAdjustDinnerCredits } from "../api/mutations";
 import { useDinnersStore } from "../store/useDinnersStore";
-import type { CreditAdjustReason, CreditRecord } from "../types";
+import type { CreditAdjustReason } from "../types";
 
 const REASONS: { value: CreditAdjustReason; label: string }[] = [
   { value: "annual_allocation", label: "Annual allocation" },
@@ -27,11 +29,10 @@ const REASONS: { value: CreditAdjustReason; label: string }[] = [
 export function AdjustCreditsModal() {
   const open = useDinnersStore((s) => s.adjustOpen);
   const memberId = useDinnersStore((s) => s.adjustMemberId);
-  const credits = useDinnersStore((s) => s.credits);
   const closeAdjust = useDinnersStore((s) => s.closeAdjust);
-  const adjustCredits = useDinnersStore((s) => s.adjustCredits);
-
-  const record = credits.find((c) => c.memberId === memberId);
+  const { data: membersData } = useMembersList();
+  const members = membersData?.members ?? [];
+  const selectedMember = members.find((m) => m.id === memberId);
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && closeAdjust()}>
@@ -39,88 +40,94 @@ export function AdjustCreditsModal() {
         <DialogHeader>
           <DialogTitle>Adjust credits</DialogTitle>
           <DialogDescription>
-            {record
-              ? `${record.memberName} — current balance: ${record.balance}`
-              : "Select a member to adjust credits."}
+            Set a member&apos;s dinner credit balance via POST /api/dinners/credits.
           </DialogDescription>
         </DialogHeader>
 
-        {record && memberId && (
-          <AdjustCreditsForm
-            key={memberId}
-            record={record}
-            memberId={memberId}
-            onSubmit={adjustCredits}
-            onClose={closeAdjust}
-          />
-        )}
+        <AdjustCreditsForm
+          key={memberId ?? "new"}
+          members={members}
+          initialMemberId={memberId}
+          selectedMemberName={selectedMember?.name}
+          onClose={closeAdjust}
+        />
       </DialogContent>
     </Dialog>
   );
 }
 
 function AdjustCreditsForm({
-  record,
-  memberId,
-  onSubmit,
+  members,
+  initialMemberId,
+  selectedMemberName,
   onClose,
 }: {
-  record: CreditRecord;
-  memberId: string;
-  onSubmit: (
-    memberId: string,
-    delta: number,
-    reason: CreditAdjustReason,
-    note?: string,
-  ) => void;
+  members: { id: string; name: string; company: string }[];
+  initialMemberId: string | null;
+  selectedMemberName?: string;
   onClose: () => void;
 }) {
-  const [delta, setDelta] = useState(1);
+  const adjustCredits = useAdjustDinnerCredits();
+  const [userId, setUserId] = useState(initialMemberId ?? "");
+  const [balance, setBalance] = useState(1);
   const [reason, setReason] = useState<CreditAdjustReason>("annual_allocation");
   const [note, setNote] = useState("");
 
   const handleSubmit = () => {
-    if (delta === 0) return;
-    onSubmit(memberId, delta, reason, note.trim() || undefined);
-    onClose();
+    if (!userId || balance < 0) return;
+    adjustCredits.mutate(
+      { userId, balance },
+      {
+        onSuccess: () => onClose(),
+      },
+    );
   };
 
   return (
     <div className="space-y-4">
-      <div className="space-y-2">
-        <p className="text-xs font-medium text-ink2">Adjustment</p>
-        <div className="flex items-center gap-2">
-          <Button type="button" variant="outline" size="sm" onClick={() => setDelta((d) => d - 1)}>
-            −
-          </Button>
-          <Input
-            type="number"
-            value={delta}
-            onChange={(e) => setDelta(Number(e.target.value) || 0)}
-            className="text-center"
-          />
-          <Button type="button" variant="outline" size="sm" onClick={() => setDelta((d) => d + 1)}>
-            +
-          </Button>
-        </div>
-        <p className="text-xs text-muted">
-          New balance:{" "}
-          <span className="font-semibold text-ink">
-            {Math.max(0, record.balance + delta)}
-          </span>
-        </p>
+      <div className="space-y-1.5">
+        <label htmlFor="credit-member" className="text-xs font-medium text-ink2">
+          Member
+        </label>
+        <select
+          id="credit-member"
+          value={userId}
+          onChange={(e) => setUserId(e.target.value)}
+          className={cn(
+            "flex h-11 w-full rounded-xl border border-border bg-white px-3 text-sm text-ink",
+            "focus:outline-none focus:ring-2 focus:ring-blue1/20 focus:border-blue1",
+          )}
+        >
+          <option value="">Select member…</option>
+          {members.map((m) => (
+            <option key={m.id} value={m.id}>
+              {m.name} · {m.company}
+            </option>
+          ))}
+        </select>
+        {selectedMemberName && !userId ? (
+          <p className="text-xs text-muted">Previously selected: {selectedMemberName}</p>
+        ) : null}
       </div>
+
+      <Input
+        label="New balance"
+        type="number"
+        min={0}
+        value={balance}
+        onChange={(e) => setBalance(Number(e.target.value) || 0)}
+      />
 
       <div className="space-y-1.5">
         <label htmlFor="adjust-reason" className="text-xs font-medium text-ink2">
-          Reason
+          Reason (internal)
         </label>
         <select
           id="adjust-reason"
           value={reason}
           onChange={(e) => setReason(e.target.value as CreditAdjustReason)}
           className={cn(
-            "flex h-11 w-full rounded-xl border border-border bg-white px-4 text-sm text-ink",
+            "flex h-11 w-full rounded-xl border border-border bg-white px-3 text-sm text-ink",
             "focus:outline-none focus:ring-2 focus:ring-blue1/20 focus:border-blue1",
           )}
         >
@@ -133,19 +140,23 @@ function AdjustCreditsForm({
       </div>
 
       <Textarea
-        label="Note (optional)"
+        label="Note (optional, not sent to API)"
         placeholder="Internal note for this adjustment"
         value={note}
         onChange={(e) => setNote(e.target.value)}
-        rows={3}
+        rows={2}
       />
 
       <div className="flex justify-end gap-2 pt-2">
         <Button type="button" variant="ghost" onClick={onClose}>
           Cancel
         </Button>
-        <Button type="button" onClick={handleSubmit} disabled={delta === 0}>
-          Apply adjustment
+        <Button
+          type="button"
+          onClick={handleSubmit}
+          disabled={!userId || adjustCredits.isPending}
+        >
+          Set balance
         </Button>
       </div>
     </div>

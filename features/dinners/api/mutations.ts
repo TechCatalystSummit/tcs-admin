@@ -21,7 +21,7 @@ export function useUpdateDinner() {
 export function useAdjustDinnerCredits() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (body: { userId: string; delta: number; reason?: string }) => {
+    mutationFn: async (body: { userId: string; balance: number }) => {
       await apiFetch("/api/dinners/credits", { method: "POST", body });
     },
     onSuccess: () => {

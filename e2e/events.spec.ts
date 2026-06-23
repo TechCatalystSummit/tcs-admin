@@ -21,4 +21,16 @@ test.describe("Events", () => {
     await page.goto("/events");
     await expect(page.getByRole("heading", { name: "Events" })).toBeVisible();
   });
+
+  test("event detail shows attendees section", async ({ page }) => {
+    await page.goto("/events");
+    const firstLink = page.locator("table tbody tr a").first();
+    const hasEvent = (await firstLink.count()) > 0;
+    if (!hasEvent) {
+      test.skip();
+      return;
+    }
+    await firstLink.click();
+    await expect(page.getByText("Attendees")).toBeVisible({ timeout: 10_000 });
+  });
 });

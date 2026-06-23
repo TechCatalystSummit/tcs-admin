@@ -1,19 +1,26 @@
 "use client";
 
 import { EmptyState, PageHeader } from "@/shared/components/layout/PageHeader";
+import { Button } from "@/shared/components/ui/Button";
 import { Card, CardContent, CardHeader } from "@/shared/components/ui/Card";
 import { SectionLabel } from "@/shared/components/ui/SectionLabel";
 import { Spinner } from "@/shared/components/ui/SectionLabel";
 import { formatDate } from "@/shared/utils/formatters";
 import { useRouter } from "next/navigation";
-import { useSponsor } from "../api/queries";
+import { useState } from "react";
+import { useDeleteSponsor } from "../api/mutations";
+import { useSponsor, useSponsorOffers } from "../api/queries";
+import { SponsorFormModal } from "../components/SponsorFormModal";
 import { SponsorKPIRow } from "../components/SponsorKPIRow";
 import { SponsorLeadsPanel } from "../components/SponsorLeadsPanel";
 import { SponsorStatusBadge, SponsorTierBadge } from "../components/SponsorStatusBadge";
 
 export default function SponsorDetailPage({ sponsorId }: { sponsorId: string }) {
   const router = useRouter();
+  const [editOpen, setEditOpen] = useState(false);
   const { data: sponsor, isLoading } = useSponsor(sponsorId);
+  const { data: offers = [] } = useSponsorOffers(sponsorId);
+  const deleteSponsor = useDeleteSponsor();
 
   if (isLoading) {
     return (
@@ -37,15 +44,34 @@ export default function SponsorDetailPage({ sponsorId }: { sponsorId: string }) 
     );
   }
 
+  const handleDeactivate = () => {
+    if (!window.confirm(`Deactivate ${sponsor.name}?`)) return;
+    deleteSponsor.mutate(sponsorId, {
+      onSuccess: () => router.replace("/sponsors"),
+    });
+  };
+
   return (
     <>
       <PageHeader
         title={sponsor.name}
         subtitle={`${sponsor.industry} · ${sponsor.contactEmail || sponsor.website}`}
         action={
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <SponsorTierBadge tier={sponsor.tier} />
             <SponsorStatusBadge status={sponsor.status} />
+            <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
+              Edit
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleDeactivate}
+              disabled={deleteSponsor.isPending}
+              className="text-red-600 border-red-200 hover:bg-red-50"
+            >
+              Deactivate
+            </Button>
           </div>
         }
       />
@@ -73,8 +99,29 @@ export default function SponsorDetailPage({ sponsorId }: { sponsorId: string }) 
         </Card>
       </div>
 
+      <SectionLabel className="mb-3">Offers</SectionLabel>
+      {offers.length === 0 ? (
+        <p className="text-sm text-muted mb-6">No active offers for this sponsor.</p>
+      ) : (
+        <ul className="mb-6 space-y-2">
+          {offers.map((offer) => (
+            <li key={offer.id} className="rounded-xl border border-border bg-white px-4 py-3 text-sm">
+              <p className="font-medium text-ink">{offer.title}</p>
+              {offer.description ? <p className="text-muted mt-1">{offer.description}</p> : null}
+            </li>
+          ))}
+        </ul>
+      )}
+
       <SectionLabel className="mb-3">Leads</SectionLabel>
       <SponsorLeadsPanel leads={sponsor.leads} />
+
+      <SponsorFormModal
+        mode="edit"
+        sponsorId={sponsorId}
+        open={editOpen}
+        onClose={() => setEditOpen(false)}
+      />
     </>
   );
 }

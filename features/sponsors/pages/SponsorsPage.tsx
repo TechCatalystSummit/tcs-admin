@@ -4,7 +4,9 @@ import { ExportButton } from "@/shared/components/data-display/ExportButton";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 import { GradientButton } from "@/shared/components/ui/GradientButton";
 import { Spinner } from "@/shared/components/ui/SectionLabel";
+import { useState } from "react";
 import { SponsorFilters } from "../components/SponsorFilters";
+import { SponsorFormModal } from "../components/SponsorFormModal";
 import { SponsorsTable } from "../components/SponsorsTable";
 import { useFilteredSponsors } from "../hooks/useFilteredSponsors";
 
@@ -18,6 +20,7 @@ const exportColumns = [
 ];
 
 export default function SponsorsPage() {
+  const [createOpen, setCreateOpen] = useState(false);
   const { sponsors, isLoading } = useFilteredSponsors();
   const exportData = sponsors.map((s) => ({
     name: s.name,
@@ -36,7 +39,7 @@ export default function SponsorsPage() {
         action={
           <div className="flex items-center gap-2">
             <ExportButton data={exportData} filename="tcs-sponsors" columns={exportColumns} />
-            <GradientButton>Add Sponsor</GradientButton>
+            <GradientButton onClick={() => setCreateOpen(true)}>Add Sponsor</GradientButton>
           </div>
         }
       />
@@ -48,6 +51,7 @@ export default function SponsorsPage() {
       ) : (
         <SponsorsTable />
       )}
+      <SponsorFormModal mode="create" open={createOpen} onClose={() => setCreateOpen(false)} />
     </>
   );
 }

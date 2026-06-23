@@ -51,3 +51,13 @@ Track manual validation per integration phase. Mark items `[x]` when verified.
 
 - [ ] MockDataBanner visible on notifications, outreach, analytics
 - [ ] `docs/PHASE2_DEFERRED.md` documents missing endpoints
+
+## Phase 2b — Partial wiring
+
+- [ ] Event detail loads attendees from `GET /api/events/:id/attendees`
+- [ ] Event status PATCH and DELETE work on detail page
+- [ ] Sponsor create/edit/deactivate modals wired
+- [ ] Dashboard charts derive from payments + members; activity from outcomes
+- [ ] Analytics outcome log from `GET /api/outcomes`
+- [ ] Tier pricing from `GET /api/membership/tiers`
+- [ ] Dinner credit adjust via `POST /api/dinners/credits` (ledger remains illustrative)

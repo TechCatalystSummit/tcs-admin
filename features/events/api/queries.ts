@@ -1,7 +1,7 @@
 import { apiFetch } from "@/shared/lib/api/client";
 import { useQuery } from "@tanstack/react-query";
-import { mapApiEvent } from "./mappers";
-import type { ApiEvent } from "./mappers";
+import { mapApiAttendee, mapApiEvent } from "./mappers";
+import type { ApiEvent, ApiEventAttendee } from "./mappers";
 
 export const eventKeys = {
   all: ["events"] as const,
@@ -37,8 +37,11 @@ export function useEventAttendees(eventId: string | null | undefined) {
   return useQuery({
     queryKey: eventKeys.attendees(eventId ?? ""),
     queryFn: async () => {
-      const { data } = await apiFetch<unknown[]>(`/api/events/${eventId}/attendees`);
-      return data;
+      const { data, meta } = await apiFetch<ApiEventAttendee[]>(
+        `/api/events/${eventId}/attendees`,
+        { params: { page: 1, perPage: 100 } },
+      );
+      return { attendees: data.map(mapApiAttendee), meta };
     },
     enabled: Boolean(eventId),
   });

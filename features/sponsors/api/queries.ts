@@ -7,6 +7,7 @@ export const sponsorKeys = {
   all: ["sponsors"] as const,
   list: (params?: Record<string, string>) => [...sponsorKeys.all, "list", params] as const,
   detail: (id: string) => [...sponsorKeys.all, "detail", id] as const,
+  offers: (id: string) => [...sponsorKeys.all, "offers", id] as const,
 };
 
 export function useSponsorsList(params?: { industry?: string }) {
@@ -27,6 +28,33 @@ export function useSponsor(id: string | null | undefined) {
     queryFn: async () => {
       const { data } = await apiFetch<ApiSponsor>(`/api/sponsors/${id}`);
       return mapApiSponsor(data);
+    },
+    enabled: Boolean(id),
+  });
+}
+
+interface ApiSponsorOffer {
+  id: string;
+  title: string;
+  description?: string | null;
+  perk?: string | null;
+  isActive?: boolean;
+  expiresAt?: string | null;
+}
+
+export function useSponsorOffers(id: string | null | undefined) {
+  return useQuery({
+    queryKey: sponsorKeys.offers(id ?? ""),
+    queryFn: async () => {
+      const { data } = await apiFetch<ApiSponsorOffer[]>(`/api/sponsors/${id}/offers`);
+      return data.map((o) => ({
+        id: o.id,
+        title: o.title,
+        description: o.description ?? "",
+        perk: o.perk ?? "",
+        active: o.isActive !== false,
+        expiresAt: o.expiresAt ?? undefined,
+      }));
     },
     enabled: Boolean(id),
   });

@@ -53,5 +53,16 @@ export function CreditLedger() {
     [openAdjust],
   );
 
-  return <DataTable columns={columns} data={credits} pageSize={10} />;
+  return (
+    <div className="space-y-3">
+      <p className="text-xs text-muted rounded-lg border border-border bg-surface/50 px-3 py-2">
+        Per-member balances require a future admin credits list API. Adjustments apply
+        immediately via POST /api/dinners/credits. Sample ledger below is illustrative.
+      </p>
+      <DataTable columns={columns} data={credits} pageSize={10} />
+      <Button variant="outline" size="sm" onClick={() => openAdjust("")}>
+        Adjust member credits
+      </Button>
+    </div>
+  );
 }

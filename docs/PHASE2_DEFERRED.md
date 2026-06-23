@@ -35,3 +35,13 @@ These admin modules remain on mock data until the corresponding tcs-api sprints 
 ## UI behavior
 
 Pages for deferred modules display `MockDataBanner` until APIs are available.
+
+## Partial gaps (Phase 2b)
+
+These sub-features remain limited until additional tcs-api endpoints ship:
+
+| Area | Wired today | Blocked on |
+|------|-------------|------------|
+| Dinner credit ledger | `POST /api/dinners/credits` adjust by member | `GET` admin list of all member balances |
+| Analytics KPIs/charts | `GET /api/outcomes` outcome log | S20 summary + activity feed |
+| Payment refunds | Read-only payment history | No refund POST endpoint |

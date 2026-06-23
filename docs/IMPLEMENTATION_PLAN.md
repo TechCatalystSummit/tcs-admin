@@ -251,6 +251,25 @@ All 12 admin modules ship with mock data, Zustand stores, responsive shell, comm
 
 ---
 
+## Phase 2b — Partial API Wiring
+
+**Goal:** Wire remaining live tcs-api endpoints where UI still used mock data or unused hooks.
+
+| Task | Module | Status |
+|------|--------|--------|
+| 2b.1 | Events — attendees, status PATCH, DELETE | ✓ |
+| 2b.2 | Sponsors — create/edit/deactivate UI | ✓ |
+| 2b.3 | Dashboard — live charts + activity feed | ✓ |
+| 2b.4 | Analytics — outcome log from `/api/outcomes` | ✓ |
+| 2b.5 | Payments — tier pricing from `/api/membership/tiers` | ✓ |
+| 2b.6 | Dinners — credit adjust mutation fix + member picker | ✓ |
+
+**Still deferred:** notifications, outreach, full analytics (S16–S20); dinner credit ledger list.
+
+**Verify:** `npx tsc --noEmit && npm run lint && npm test && npm run build`
+
+---
+
 ## Per-Sprint Workflow
 2. Run `npx tsc --noEmit && npm run lint && npm run build`
 3. Review against build plan component inventory

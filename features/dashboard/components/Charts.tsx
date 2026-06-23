@@ -3,7 +3,7 @@
 import { CardContent, CardHeader } from "@/shared/components/ui/Card";
 import { LuxeCard } from "@/shared/components/motion/LuxeCard";
 import { SectionLabel } from "@/shared/components/ui/SectionLabel";
-import { useDashboardStore } from "../store/useDashboardStore";
+import { useDashboardData } from "../api/queries";
 import {
   Area,
   AreaChart,
@@ -16,12 +16,13 @@ import {
 } from "recharts";
 
 export function RevenueChart() {
-  const data = useDashboardStore((s) => s.revenueData);
+  const { revenueData, isLoading } = useDashboardData();
+  const data = revenueData.length > 0 ? revenueData : [{ label: "—", value: 0 }];
 
   return (
     <LuxeCard className="bg-white border border-border overflow-hidden">
       <CardHeader>
-        <SectionLabel>MRR Trend — 30 Days</SectionLabel>
+        <SectionLabel>Revenue Trend — 6 Months</SectionLabel>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={180}>
@@ -41,13 +42,15 @@ export function RevenueChart() {
             <Area type="monotone" dataKey="value" stroke="#1A73E8" fill="url(#revenueGradient)" strokeWidth={2} />
           </AreaChart>
         </ResponsiveContainer>
+        {isLoading ? <p className="text-xs text-hint mt-2">Loading payment data…</p> : null}
       </CardContent>
     </LuxeCard>
   );
 }
 
 export function MemberGrowthChart() {
-  const data = useDashboardStore((s) => s.growthData);
+  const { growthData, isLoading } = useDashboardData();
+  const data = growthData.length > 0 ? growthData : [{ label: "—", value: 0 }];
 
   return (
     <LuxeCard className="bg-white border border-border overflow-hidden">
@@ -69,6 +72,7 @@ export function MemberGrowthChart() {
             <Bar dataKey="value" fill="url(#brandGradient)" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
+        {isLoading ? <p className="text-xs text-hint mt-2">Loading member data…</p> : null}
       </CardContent>
     </LuxeCard>
   );

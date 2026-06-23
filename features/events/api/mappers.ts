@@ -1,4 +1,21 @@
-import type { Event, EventStatus, EventType } from "../types";
+import type { MemberTier } from "@/features/members/types";
+import type { Event, EventAttendee, EventStatus, EventType, RsvpStatus } from "../types";
+
+export interface ApiEventAttendee {
+  rsvpId: string;
+  status: string;
+  isVip?: boolean;
+  rsvpCreatedAt?: string;
+  checkedInAt?: string | null;
+  user: {
+    id: string;
+    name: string;
+    email?: string | null;
+    title?: string | null;
+    company?: string | null;
+    tier?: string | null;
+  };
+}
 
 export interface ApiEvent {
   id: string;
@@ -55,6 +72,36 @@ export function mapApiEvent(e: ApiEvent): Event {
     agenda: [],
     attendees: [],
   };
+}
+
+export function mapApiAttendee(a: ApiEventAttendee): EventAttendee {
+  const rsvpMap: Record<string, RsvpStatus> = {
+    confirmed: "confirmed",
+    waitlist: "waitlist",
+    cancelled: "cancelled",
+    canceled: "cancelled",
+    "no-show": "no-show",
+    no_show: "no-show",
+  };
+  const validTiers: MemberTier[] = ["community", "builder", "executive", "partner", "legacy"];
+  const tier = validTiers.includes(a.user.tier as MemberTier)
+    ? (a.user.tier as MemberTier)
+    : "community";
+
+  return {
+    id: a.rsvpId,
+    memberId: a.user.id,
+    name: a.user.name,
+    email: a.user.email ?? "",
+    tier,
+    rsvpStatus: rsvpMap[a.status] ?? "confirmed",
+    checkedInAt: a.checkedInAt ?? undefined,
+    isVip: a.isVip ?? false,
+  };
+}
+
+export function uiStatusToApi(status: EventStatus): string {
+  return status;
 }
 
 export function formToCreateBody(data: {
