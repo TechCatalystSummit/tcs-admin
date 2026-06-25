@@ -6,6 +6,7 @@ import { useAuthStore } from "@/features/auth/store/useAuthStore";
 import { GradientButton } from "@/shared/components/ui/GradientButton";
 import { Input } from "@/shared/components/ui/Input";
 import { motion } from "motion/react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -93,6 +94,11 @@ export function LoginCard() {
         <GradientButton type="submit" className="w-full" disabled={submitting || isLoading}>
           {submitting ? "Signing in…" : "Sign in"}
         </GradientButton>
+        <p className="text-center text-sm">
+          <Link href="/forgot-password" className="text-blue1 font-medium">
+            Forgot password?
+          </Link>
+        </p>
       </motion.form>
 
       <motion.p

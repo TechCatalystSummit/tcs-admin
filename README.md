@@ -32,7 +32,9 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) — redirects to `/dashboard`. Sign in at `/login` (Phase 1: any email works).
+Open [http://localhost:3000](http://localhost:3000) — redirects to `/dashboard`. Sign in at `/login` (admin email + password).
+
+**Member auth (email links):** public routes at `/auth/*` only — no admin UI. See [tcs-api doc/auth-member-contract.md](../tcs-api/doc/auth-member-contract.md). Set `NEXT_PUBLIC_SITE_URL` to match tcs-api `ADMIN_ORIGIN`.
 
 ## Commands
 
