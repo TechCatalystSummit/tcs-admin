@@ -36,6 +36,8 @@ Open [http://localhost:3000](http://localhost:3000) — redirects to `/dashboard
 
 **Member auth (email links):** public routes at `/auth/*` only — no admin UI. See [tcs-api doc/auth-member-contract.md](../tcs-api/doc/auth-member-contract.md). Set `NEXT_PUBLIC_SITE_URL` to match tcs-api `ADMIN_ORIGIN`.
 
+**Deployed env (Vercel + Render + Supabase + Expo):** [tcs-api doc/deploy-env.md](../tcs-api/doc/deploy-env.md).
+
 ## Commands
 
 ```bash
