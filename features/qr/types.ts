@@ -1,13 +1,15 @@
+/** Matches tcs-api qr.validators.ts qrType enum */
 export type QRType =
-  | "event_check_in"
-  | "event_registration"
-  | "sponsor_lead"
-  | "member_profile"
-  | "intro_request"
+  | "event_signup"
+  | "event_rsvp"
   | "dinner_request"
-  | "payment_link"
-  | "app_download"
-  | "custom";
+  | "vip_application"
+  | "sponsor_inquiry"
+  | "speaker_application"
+  | "member_referral"
+  | "sponsor_booth"
+  | "post_event_followup"
+  | "general_signup";
 
 export type QRConversionStatus = "none" | "signup" | "rsvp" | "lead" | "payment";
 
@@ -15,23 +17,23 @@ export interface QRScan {
   id: string;
   qrCodeId: string;
   timestamp: string;
-  userName?: string;
-  userEmail?: string;
+  userId?: string | null;
+  converted: boolean;
+  conversionType?: string | null;
   conversionStatus: QRConversionStatus;
 }
 
 export interface QRCode {
   id: string;
-  name: string;
+  shortCode: string;
   type: QRType;
   source: string;
   campaign: string;
-  shortUrl: string;
+  displayUrl: string;
   scans: number;
   conversions: number;
   createdAt: string;
-  eventName?: string;
-  sponsorName?: string;
+  eventId?: string | null;
 }
 
 export interface QRAnalyticsDay {
@@ -39,22 +41,35 @@ export interface QRAnalyticsDay {
   scans: number;
 }
 
+export interface QRAnalytics {
+  qrCodeId: string;
+  shortCode: string;
+  totalScans: number;
+  uniqueScans: number;
+  conversions: number;
+  dailyScans: QRAnalyticsDay[];
+  recentScans: QRScan[];
+}
+
 export interface GenerateQRInput {
-  name: string;
+  shortCode: string;
   type: QRType;
   source: string;
   campaign: string;
-  eventName?: string;
+  eventId?: string;
 }
 
 export const QR_TYPE_LABELS: Record<QRType, string> = {
-  event_check_in: "Event Check-in",
-  event_registration: "Event Registration",
-  sponsor_lead: "Sponsor Lead",
-  member_profile: "Member Profile",
-  intro_request: "Intro Request",
+  event_signup: "Event Sign-up",
+  event_rsvp: "Event RSVP",
   dinner_request: "Dinner Request",
-  payment_link: "Payment Link",
-  app_download: "App Download",
-  custom: "Custom",
+  vip_application: "VIP Application",
+  sponsor_inquiry: "Sponsor Inquiry",
+  speaker_application: "Speaker Application",
+  member_referral: "Member Referral",
+  sponsor_booth: "Sponsor Booth",
+  post_event_followup: "Post-Event Follow-up",
+  general_signup: "General Sign-up",
 };
+
+export const SHORT_CODE_RE = /^[a-zA-Z0-9_-]+$/;

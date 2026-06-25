@@ -9,12 +9,13 @@ export function useCreateQRCode() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (input: GenerateQRInput) => {
-      const body = {
-        shortCode: input.name.toLowerCase().replace(/\s+/g, "-"),
-        qrType: input.type === "event_registration" ? "event_signup" : input.type,
+      const body: Record<string, string> = {
+        shortCode: input.shortCode,
+        qrType: input.type,
         campaign: input.campaign,
         source: input.source,
       };
+      if (input.eventId) body.eventId = input.eventId;
       await apiFetch("/api/qr", { method: "POST", body });
     },
     onSuccess: () => {

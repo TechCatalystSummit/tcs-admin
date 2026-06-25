@@ -4,6 +4,7 @@ import { ExportButton } from "@/shared/components/data-display/ExportButton";
 import { QueryBoundary } from "@/shared/components/data-display/QueryBoundary";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 import { SectionLabel } from "@/shared/components/ui/SectionLabel";
+import { useEffect } from "react";
 import { GenerateQRModal } from "../components/GenerateQRModal";
 import { OpenGenerateButton } from "../components/OpenGenerateButton";
 import { QRAnalyticsChart } from "../components/QRAnalyticsChart";
@@ -11,10 +12,11 @@ import { QRCodeDisplayPanel } from "../components/QRCodeDisplayPanel";
 import { QRCodesTable } from "../components/QRCodesTable";
 import { ScanLogPanel } from "../components/ScanLogPanel";
 import { useQRCodesList } from "../api/queries";
+import { useQRStore } from "../store/useQRStore";
 import { QR_TYPE_LABELS } from "../types";
 
 const exportColumns = [
-  { key: "name" as const, header: "Code Name" },
+  { key: "shortCode" as const, header: "Short Code" },
   { key: "type" as const, header: "Type" },
   { key: "source" as const, header: "Source" },
   { key: "campaign" as const, header: "Campaign" },
@@ -26,8 +28,16 @@ const exportColumns = [
 export default function QRCodesPage() {
   const { data, isLoading, isError, error, refetch } = useQRCodesList();
   const codes = data?.codes ?? [];
+  const selectedCodeId = useQRStore((s) => s.selectedCodeId);
+  const selectCode = useQRStore((s) => s.selectCode);
+
+  useEffect(() => {
+    if (codes.length > 0 && !selectedCodeId) {
+      selectCode(codes[0].id);
+    }
+  }, [codes, selectedCodeId, selectCode]);
   const exportData = codes.map((c) => ({
-    name: c.name,
+    shortCode: c.shortCode,
     type: QR_TYPE_LABELS[c.type],
     source: c.source,
     campaign: c.campaign,
@@ -61,7 +71,7 @@ export default function QRCodesPage() {
         <>
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
             <div className="xl:col-span-2">
-              <QRAnalyticsChart codes={codes} />
+              <QRAnalyticsChart />
             </div>
             <QRCodeDisplayPanel codes={codes} />
           </div>
@@ -70,7 +80,7 @@ export default function QRCodesPage() {
           <QRCodesTable codes={codes} />
 
           <div className="mt-10">
-            <ScanLogPanel codes={codes} />
+            <ScanLogPanel />
           </div>
         </>
       </QueryBoundary>

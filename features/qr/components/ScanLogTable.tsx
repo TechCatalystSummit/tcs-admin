@@ -27,13 +27,8 @@ export function ScanLogTable({ scans }: { scans: QRScan[] }) {
         id: "user",
         header: "User",
         cell: ({ row }) =>
-          row.original.userName ? (
-            <div>
-              <p className="font-medium">{row.original.userName}</p>
-              {row.original.userEmail && (
-                <p className="text-xs text-muted">{row.original.userEmail}</p>
-              )}
-            </div>
+          row.original.userId ? (
+            <span className="font-mono text-xs text-muted">{row.original.userId.slice(0, 8)}…</span>
           ) : (
             <span className="text-muted">Anonymous</span>
           ),

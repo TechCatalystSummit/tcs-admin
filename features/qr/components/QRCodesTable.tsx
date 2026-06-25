@@ -15,7 +15,7 @@ export function QRCodesTable({ codes }: { codes: QRCode[] }) {
 
   const columns = useMemo<ColumnDef<QRCode>[]>(
     () => [
-      { accessorKey: "name", header: "Code" },
+      { accessorKey: "shortCode", header: "Code" },
       {
         accessorKey: "type",
         header: "Type",
