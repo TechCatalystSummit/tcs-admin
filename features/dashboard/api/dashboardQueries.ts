@@ -7,10 +7,10 @@ export const dashboardKeys = {
 };
 
 export interface ApiDashboardStats {
-  members: { total: number; approved: number; pending: number };
-  events: { upcoming: number; totalRsvps: number };
-  intros: { pending: number; approved: number; completed: number };
-  revenue: { mtdCents: number; activeSubscriptions: number };
+  members: { total: number; approved: number; pending: number; totalDeltaPct?: number };
+  events: { upcoming: number; totalRsvps: number; rsvpsDeltaPct?: number };
+  intros: { pending: number; approved: number; completed: number; completedDeltaPct?: number };
+  revenue: { mtdCents: number; activeSubscriptions: number; mtdDeltaPct?: number };
   trends: {
     revenueByMonth: { label: string; valueCents: number }[];
     signupsByWeek: { label: string; count: number }[];

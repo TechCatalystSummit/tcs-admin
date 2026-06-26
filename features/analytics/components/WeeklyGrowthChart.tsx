@@ -2,7 +2,6 @@
 
 import { Card, CardContent, CardHeader } from "@/shared/components/ui/Card";
 import { SectionLabel } from "@/shared/components/ui/SectionLabel";
-import { useAnalyticsStore } from "../store/useAnalyticsStore";
 import {
   Bar,
   BarChart,
@@ -12,9 +11,10 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { useAnalyticsContext } from "./AnalyticsProvider";
 
 export function WeeklyGrowthChart() {
-  const data = useAnalyticsStore((s) => s.data.weeklyGrowth);
+  const { data } = useAnalyticsContext();
 
   return (
     <Card>
@@ -23,7 +23,7 @@ export function WeeklyGrowthChart() {
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={220}>
-          <BarChart data={data} barSize={12}>
+          <BarChart data={data.weeklyGrowth} barSize={12}>
             <XAxis dataKey="week" tick={{ fontSize: 9, fill: "#BBBBC5" }} axisLine={false} tickLine={false} />
             <YAxis hide />
             <Tooltip contentStyle={{ borderRadius: 8, border: "1px solid #E8E8EB", fontSize: 12 }} />

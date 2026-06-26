@@ -1,7 +1,7 @@
-import { MockDataBanner } from "@/shared/components/MockDataBanner";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 import { SectionLabel } from "@/shared/components/ui/SectionLabel";
 import { AnalyticsKPIRow } from "../components/AnalyticsKPIRow";
+import { AnalyticsProvider } from "../components/AnalyticsProvider";
 import { DateRangePicker } from "../components/DateRangePicker";
 import { IntroConversionFunnel } from "../components/IntroConversionFunnel";
 import { OutcomeLogTable } from "../components/OutcomeLogTable";
@@ -16,25 +16,25 @@ export default function AnalyticsPage() {
         title="Analytics"
         subtitle="Platform outcomes, growth, and revenue metrics"
       />
-      <MockDataBanner module="Analytics" apiSprint="tcs-api S20" />
-      <div className="space-y-8">
-        <DateRangePicker />
-        <AnalyticsKPIRow />
-        <div className="grid gap-6 lg:grid-cols-2">
-          <WeeklyGrowthChart />
-          <RevenueByTierChart />
+      <AnalyticsProvider>
+        <div className="space-y-8">
+          <DateRangePicker />
+          <AnalyticsKPIRow />
+          <div className="grid gap-6 lg:grid-cols-2">
+            <WeeklyGrowthChart />
+            <RevenueByTierChart />
+          </div>
+          <IntroConversionFunnel />
+          <section className="space-y-4">
+            <SectionLabel>Top Events by ROI</SectionLabel>
+            <TopEventsTable />
+          </section>
+          <section className="space-y-4">
+            <SectionLabel>Outcome log</SectionLabel>
+            <OutcomeLogTable />
+          </section>
         </div>
-        <IntroConversionFunnel />
-        <section className="space-y-4">
-          <SectionLabel>Top Events by ROI</SectionLabel>
-          <TopEventsTable />
-        </section>
-        <section className="space-y-4">
-          <SectionLabel>Outcome log</SectionLabel>
-          <p className="text-xs text-muted">Live from GET /api/outcomes</p>
-          <OutcomeLogTable />
-        </section>
-      </div>
+      </AnalyticsProvider>
     </>
   );
 }

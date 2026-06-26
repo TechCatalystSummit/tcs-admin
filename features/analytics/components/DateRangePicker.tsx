@@ -2,8 +2,8 @@
 
 import { Button } from "@/shared/components/ui/Button";
 import { cn } from "@/shared/utils/cn";
-import { useAnalyticsStore } from "../store/useAnalyticsStore";
 import type { DateRange } from "../types";
+import { useAnalyticsContext } from "./AnalyticsProvider";
 
 const ranges: { value: DateRange; label: string }[] = [
   { value: "7d", label: "Last 7 days" },
@@ -13,8 +13,7 @@ const ranges: { value: DateRange; label: string }[] = [
 ];
 
 export function DateRangePicker() {
-  const dateRange = useAnalyticsStore((s) => s.dateRange);
-  const setDateRange = useAnalyticsStore((s) => s.setDateRange);
+  const { dateRange, setDateRange } = useAnalyticsContext();
 
   return (
     <div className="flex flex-wrap gap-2">
@@ -23,6 +22,7 @@ export function DateRangePicker() {
           key={range.value}
           variant={dateRange === range.value ? "primary" : "outline"}
           size="sm"
+          disabled={range.value === "custom"}
           onClick={() => setDateRange(range.value)}
           className={cn(dateRange !== range.value && "font-normal")}
         >

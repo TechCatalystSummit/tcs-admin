@@ -4,42 +4,64 @@ import type { ApiDashboardStats } from "./dashboardQueries";
 
 const KPI_COLORS = ["#3B82F6", "#F59E0B", "#10B981", "#8B5CF6", "#EC4899"];
 
+function formatDashboardDelta(pct: number | undefined, fallback: string): string {
+  if (pct === undefined) return fallback;
+  const sign = pct > 0 ? "+" : "";
+  return `${sign}${pct}% vs prior 30d`;
+}
+
+function deltaTypeFromPct(pct: number | undefined): "positive" | "negative" | "neutral" {
+  if (pct === undefined) return "neutral";
+  if (pct > 0) return "positive";
+  if (pct < 0) return "negative";
+  return "neutral";
+}
+
 export function mapDashboardKpis(stats: ApiDashboardStats): DashboardKPI[] {
   const mtdDollars = Math.round(stats.revenue.mtdCents / 100);
   return [
     {
       label: "Total Members",
       value: stats.members.total,
-      delta: "Live",
-      deltaType: "positive",
+      delta: formatDashboardDelta(stats.members.totalDeltaPct, "All time"),
+      deltaType:
+        stats.members.totalDeltaPct !== undefined
+          ? deltaTypeFromPct(stats.members.totalDeltaPct)
+          : "positive",
       topColor: KPI_COLORS[0]!,
     },
     {
       label: "Pending Approvals",
       value: stats.members.pending,
-      delta: "Queue",
-      deltaType: "neutral",
+      delta: stats.members.pending > 0 ? "In queue" : "Clear",
+      deltaType: stats.members.pending > 0 ? "neutral" : "positive",
       topColor: KPI_COLORS[1]!,
     },
     {
       label: "Upcoming Events",
       value: stats.events.upcoming,
-      delta: "Scheduled",
-      deltaType: "positive",
+      delta: formatDashboardDelta(stats.events.rsvpsDeltaPct, "Scheduled"),
+      deltaType:
+        stats.events.rsvpsDeltaPct !== undefined
+          ? deltaTypeFromPct(stats.events.rsvpsDeltaPct)
+          : "positive",
       topColor: KPI_COLORS[2]!,
     },
     {
       label: "Pending Intros",
       value: stats.intros.pending,
-      delta: "Queue",
-      deltaType: "neutral",
+      delta: stats.intros.pending > 0 ? "In queue" : "Clear",
+      deltaType: stats.intros.pending > 0 ? "neutral" : "positive",
       topColor: KPI_COLORS[3]!,
     },
     {
       label: "Revenue (MTD)",
       value: `$${mtdDollars.toLocaleString()}`,
-      delta: "MTD",
-      deltaType: "positive",
+      delta: formatDashboardDelta(stats.revenue.mtdDeltaPct, "Month to date"),
+      deltaType:
+        stats.revenue.mtdDeltaPct !== undefined
+          ? deltaTypeFromPct(stats.revenue.mtdDeltaPct)
+          : "positive",
       topColor: KPI_COLORS[4]!,
     },
   ];

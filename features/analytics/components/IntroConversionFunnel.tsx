@@ -3,10 +3,11 @@
 import { Card, CardContent, CardHeader } from "@/shared/components/ui/Card";
 import { SectionLabel } from "@/shared/components/ui/SectionLabel";
 import { formatPercent } from "@/shared/utils/formatters";
-import { useAnalyticsStore } from "../store/useAnalyticsStore";
+import { useAnalyticsContext } from "./AnalyticsProvider";
 
 export function IntroConversionFunnel() {
-  const funnel = useAnalyticsStore((s) => s.data.funnel);
+  const { data } = useAnalyticsContext();
+  const funnel = data.funnel;
   const maxCount = funnel[0]?.count ?? 1;
 
   return (
@@ -17,7 +18,7 @@ export function IntroConversionFunnel() {
       <CardContent className="space-y-3">
         {funnel.map((step, index) => {
           const widthPct = (step.count / maxCount) * 100;
-          const prevCount = index > 0 ? funnel[index - 1].count : step.count;
+          const prevCount = index > 0 ? funnel[index - 1]!.count : step.count;
           const conversionRate = index > 0 ? step.count / prevCount : 1;
 
           return (

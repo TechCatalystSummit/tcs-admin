@@ -4,11 +4,12 @@ import { DataTable } from "@/shared/components/data-display/DataTable";
 import { formatCurrency, formatDate } from "@/shared/utils/formatters";
 import { type ColumnDef } from "@tanstack/react-table";
 import { useMemo } from "react";
-import { useAnalyticsStore } from "../store/useAnalyticsStore";
 import type { TopEventRow } from "../types";
+import { useAnalyticsContext } from "./AnalyticsProvider";
 
 export function TopEventsTable() {
-  const topEvents = useAnalyticsStore((s) => s.data.topEvents);
+  const { data } = useAnalyticsContext();
+  const topEvents = data.topEvents;
 
   const columns = useMemo<ColumnDef<TopEventRow>[]>(
     () => [

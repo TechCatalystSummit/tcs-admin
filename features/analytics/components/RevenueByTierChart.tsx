@@ -3,7 +3,6 @@
 import { Card, CardContent, CardHeader } from "@/shared/components/ui/Card";
 import { SectionLabel } from "@/shared/components/ui/SectionLabel";
 import { formatCurrency } from "@/shared/utils/formatters";
-import { useAnalyticsStore } from "../store/useAnalyticsStore";
 import {
   Cell,
   Pie,
@@ -11,10 +10,11 @@ import {
   ResponsiveContainer,
   Tooltip,
 } from "recharts";
+import { useAnalyticsContext } from "./AnalyticsProvider";
 
 export function RevenueByTierChart() {
-  const data = useAnalyticsStore((s) => s.data.revenueByTier);
-  const chartData = data.filter((d) => d.value > 0);
+  const { data } = useAnalyticsContext();
+  const chartData = data.revenueByTier.filter((d) => d.value > 0);
 
   return (
     <Card>
