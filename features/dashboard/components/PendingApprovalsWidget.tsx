@@ -1,8 +1,9 @@
 "use client";
 
+import { QueryErrorState } from "@/shared/components/data-display/QueryErrorState";
 import { Card, CardContent, CardHeader } from "@/shared/components/ui/Card";
 import { SectionLabel } from "@/shared/components/ui/SectionLabel";
-import { useDashboardData } from "../api/queries";
+import { useDashboardContext } from "./DashboardProvider";
 import { Button } from "@/shared/components/ui/Button";
 import { Badge } from "@/shared/components/ui/Badge";
 import { Spinner } from "@/shared/components/ui/SectionLabel";
@@ -12,12 +13,14 @@ import Link from "next/link";
 export function PendingApprovalsWidget() {
   const {
     pendingApprovals,
-    isLoading,
-    isError,
+    pendingLoading,
+    pendingError,
+    pendingErrorDetail,
+    refetchPending,
     isMutating,
     approvePending,
     declinePending,
-  } = useDashboardData();
+  } = useDashboardContext();
 
   return (
     <Card>
@@ -28,10 +31,16 @@ export function PendingApprovalsWidget() {
         </Link>
       </CardHeader>
       <CardContent className="space-y-3">
-        {isLoading ? (
-          <Spinner className="h-6 w-6" />
-        ) : isError ? (
-          <p className="text-sm text-muted">Could not load approvals.</p>
+        {pendingLoading ? (
+          <div className="flex justify-center py-4">
+            <Spinner className="h-6 w-6" />
+          </div>
+        ) : pendingError ? (
+          <QueryErrorState
+            error={pendingErrorDetail}
+            onRetry={refetchPending}
+            title="Couldn't load approvals"
+          />
         ) : pendingApprovals.length === 0 ? (
           <p className="text-sm text-muted">No pending approvals right now.</p>
         ) : (

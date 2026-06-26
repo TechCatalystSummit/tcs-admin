@@ -1,13 +1,19 @@
+import { useAuthStore } from "@/features/auth/store/useAuthStore";
 import { apiFetch } from "@/shared/lib/api/client";
 import { useQuery } from "@tanstack/react-query";
 import { mapApiQRCode, mapApiQRScan, type ApiQRCode, type ApiQRScan } from "./mappers";
-import type { QRAnalytics } from "../types";
+import type { QRAnalytics, QRCode } from "../types";
 
 export const qrKeys = {
   all: ["qr"] as const,
-  list: (params?: Record<string, string>) => [...qrKeys.all, "list", params] as const,
+  list: () => [...qrKeys.all, "list"] as const,
   analytics: (id: string) => [...qrKeys.all, "analytics", id] as const,
 };
+
+export interface QRCodesListData {
+  codes: QRCode[];
+  meta?: { page: number; perPage: number; total: number };
+}
 
 interface ApiQRAnalytics {
   qrCodeId: string;
@@ -20,14 +26,18 @@ interface ApiQRAnalytics {
 }
 
 export function useQRCodesList() {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+
   return useQuery({
     queryKey: qrKeys.list(),
-    queryFn: async () => {
+    queryFn: async (): Promise<QRCodesListData> => {
       const { data, meta } = await apiFetch<ApiQRCode[]>("/api/qr", {
         params: { page: 1, perPage: 100 },
       });
       return { codes: data.map(mapApiQRCode), meta };
     },
+    enabled: isAuthenticated,
+    refetchOnMount: "always",
   });
 }
 

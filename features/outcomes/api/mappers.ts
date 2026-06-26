@@ -1,4 +1,4 @@
-import type { ActivityItem } from "@/features/dashboard/data/mockDashboard.types";
+import type { ActivityItem } from "@/shared/types/activity";
 import type { OutcomeLogEntry } from "@/features/analytics/types";
 import { formatRelative } from "@/shared/utils/formatters";
 

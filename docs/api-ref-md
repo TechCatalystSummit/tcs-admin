@@ -23,6 +23,7 @@ Complete reference for all **currently implemented** endpoints. Clients authenti
 - [Dinners (`/api/dinners`)](#dinners-apidinners)
 - [Sponsors (`/api/sponsors`)](#sponsors-apisponsors)
 - [Payments (`/api/payments`)](#payments-apipayments)
+- [Analytics (`/api/analytics`)](#analytics-apianalytics)
 
 ---
 
@@ -962,6 +963,23 @@ curl -H "Authorization: Bearer $ADMIN_TOKEN" \
 ```
 
 **Success response (200):** Paginated `eventToApi[]`.
+
+---
+
+### GET /api/events/admin/:id
+
+**Auth:** JWT + Admin
+
+**Description:** Get a single event by UUID or slug, including drafts and past events.
+
+**Example request:**
+
+```bash
+curl -H "Authorization: Bearer $ADMIN_TOKEN" \
+  http://localhost:4000/api/events/admin/tcs-summit-2026
+```
+
+**Success response (200):** Single `eventToApi` object.
 
 ---
 
@@ -2112,3 +2130,69 @@ curl -H "Authorization: Bearer $ADMIN_TOKEN" \
   "meta": { "page": 1, "perPage": 25, "total": 1 }
 }
 ```
+
+---
+
+## Analytics (`/api/analytics`)
+
+All analytics routes require **JWT + Admin**.
+
+### GET /api/analytics/dashboard
+
+**Auth:** JWT + Admin
+
+**Description:** Aggregated KPIs, chart trends, and recent activity source data for the admin dashboard. Counts are computed server-side (not paginated list caps).
+
+**Example request:**
+
+```bash
+curl -H "Authorization: Bearer $ADMIN_TOKEN" \
+  http://localhost:4000/api/analytics/dashboard
+```
+
+**Success response (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "members": { "total": 42, "approved": 38, "pending": 4 },
+    "events": { "upcoming": 3, "totalRsvps": 120 },
+    "intros": { "pending": 2, "approved": 1, "completed": 15 },
+    "revenue": { "mtdCents": 250000, "activeSubscriptions": 8 },
+    "trends": {
+      "revenueByMonth": [
+        { "label": "Jan", "valueCents": 0 },
+        { "label": "Feb", "valueCents": 50000 }
+      ],
+      "signupsByWeek": [
+        { "label": "May 1", "count": 1 },
+        { "label": "May 8", "count": 0 }
+      ]
+    },
+    "recentSignups": [
+      {
+        "id": "a1111111-1111-4111-8111-111111111111",
+        "name": "Jane Doe",
+        "company": "Acme",
+        "joinedAt": "2026-06-20T10:00:00.000Z"
+      }
+    ],
+    "recentOutcomes": [
+      {
+        "id": "o1111111-1111-4111-8111-111111111111",
+        "outcomeType": "meeting_completed",
+        "createdAt": "2026-06-21T10:00:00.000Z"
+      }
+    ],
+    "outreach": { "activeCampaigns": 1, "emailsSent30d": 42 },
+    "outcomes": { "estimatedValueTotal": 150000 }
+  }
+}
+```
+
+**Notes:**
+
+- `revenue.mtdCents` sums payments with `status: "paid"` created since the first day of the current month.
+- `trends.revenueByMonth` and `trends.signupsByWeek` each contain **6** buckets (last 6 months / 6 weeks).
+- `recentSignups` and `recentOutcomes` are the 5 most recent rows by `created_at` (used to build the dashboard activity feed).

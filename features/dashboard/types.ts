@@ -6,12 +6,7 @@ export interface DashboardKPI {
   topColor: string;
 }
 
-export interface ActivityItem {
-  id: string;
-  message: string;
-  time: string;
-  type: "member" | "event" | "intro" | "payment";
-}
+export type { ActivityItem } from "@/shared/types/activity";
 
 export interface ChartPoint {
   label: string;

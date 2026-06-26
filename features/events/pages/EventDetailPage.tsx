@@ -13,6 +13,25 @@ import { EventDetailActions } from "../components/EventDetailActions";
 import { EventQRCard } from "../components/EventQRCard";
 import { EventSpeakers } from "../components/EventSpeakers";
 import { EventStatsRow } from "../components/EventStatsRow";
+import type { Event, EventAttendee } from "../types";
+
+function eventWithAttendeeStats(event: Event, attendees: EventAttendee[]): Event {
+  const rsvpCount = attendees.filter(
+    (a) => a.rsvpStatus === "confirmed" || a.rsvpStatus === "waitlist",
+  ).length;
+  const checkedInCount = attendees.filter((a) => a.checkedInAt).length;
+  const vipCount = attendees.filter((a) => a.isVip).length;
+  const noShowCount = attendees.filter((a) => a.rsvpStatus === "no-show").length;
+
+  return {
+    ...event,
+    rsvpCount,
+    checkedInCount,
+    vipCount,
+    noShowCount,
+    attendees,
+  };
+}
 
 export default function EventDetailPage({ eventId }: { eventId: string }) {
   const router = useRouter();
@@ -63,16 +82,17 @@ export default function EventDetailPage({ eventId }: { eventId: string }) {
   }
 
   const attendees = attendeesData?.attendees ?? [];
+  const eventWithStats = eventWithAttendeeStats(event, attendees);
 
   return (
     <>
       <PageHeader
-        title={event.title}
-        subtitle={`${formatDate(event.startDate)} · ${event.location}`}
-        action={<EventDetailActions eventId={event.id} status={event.status} />}
+        title={eventWithStats.title}
+        subtitle={`${formatDate(eventWithStats.startDate)} · ${eventWithStats.location}`}
+        action={<EventDetailActions eventId={eventWithStats.id} status={eventWithStats.status} />}
       />
 
-      <EventStatsRow event={event} />
+      <EventStatsRow event={eventWithStats} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <Card className="lg:col-span-2">
@@ -80,34 +100,35 @@ export default function EventDetailPage({ eventId }: { eventId: string }) {
             <SectionLabel>Event Details</SectionLabel>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-sm text-muted">{event.description}</p>
+            <p className="text-sm text-muted">{eventWithStats.description}</p>
             <dl className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <dt className="text-hint text-xs uppercase tracking-wider">Type</dt>
-                <dd className="capitalize mt-1">{event.type}</dd>
+                <dd className="capitalize mt-1">{eventWithStats.type}</dd>
               </div>
               <div>
                 <dt className="text-hint text-xs uppercase tracking-wider">Venue</dt>
-                <dd className="mt-1">{event.venue}</dd>
+                <dd className="mt-1">{eventWithStats.venue}</dd>
               </div>
               <div>
                 <dt className="text-hint text-xs uppercase tracking-wider">Dates</dt>
                 <dd className="mt-1">
-                  {formatDate(event.startDate)}
-                  {event.endDate !== event.startDate && ` – ${formatDate(event.endDate)}`}
+                  {formatDate(eventWithStats.startDate)}
+                  {eventWithStats.endDate !== eventWithStats.startDate &&
+                    ` – ${formatDate(eventWithStats.endDate)}`}
                 </dd>
               </div>
               <div>
                 <dt className="text-hint text-xs uppercase tracking-wider">Capacity</dt>
-                <dd className="mt-1">{event.capacity}</dd>
+                <dd className="mt-1">{eventWithStats.capacity}</dd>
               </div>
             </dl>
           </CardContent>
         </Card>
 
         <div className="space-y-6 lg:col-start-3">
-          <EventQRCard eventId={event.id} eventTitle={event.title} />
-          <EventSpeakers speakers={event.speakers} />
+          <EventQRCard eventId={eventWithStats.id} eventTitle={eventWithStats.title} />
+          <EventSpeakers speakers={eventWithStats.speakers} />
         </div>
       </div>
 

@@ -1,5 +1,5 @@
 import type { MemberTier } from "@/features/members/types";
-import type { Event, EventAttendee, EventStatus, EventType, RsvpStatus } from "../types";
+import type { AgendaItem, Event, EventAttendee, EventStatus, EventType, RsvpStatus, Speaker } from "../types";
 
 export interface ApiEventAttendee {
   rsvpId: string;
@@ -36,6 +36,34 @@ export interface ApiEvent {
   agenda?: unknown[];
 }
 
+function mapApiSpeakers(raw: unknown[] | undefined): Speaker[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.map((item, index) => {
+    const s = item as Record<string, unknown>;
+    return {
+      id: String(s.id ?? s.speaker_id ?? `speaker-${index}`),
+      name: String(s.name ?? ""),
+      title: String(s.title ?? ""),
+      company: String(s.company ?? ""),
+      bio: String(s.bio ?? ""),
+    };
+  });
+}
+
+function mapApiAgenda(raw: unknown[] | undefined): AgendaItem[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.map((item, index) => {
+    const a = item as Record<string, unknown>;
+    const speakerId = a.speaker_id ?? a.speakerId;
+    return {
+      id: String(a.id ?? `agenda-${index}`),
+      time: String(a.time ?? ""),
+      title: String(a.title ?? ""),
+      ...(speakerId != null ? { speakerId: String(speakerId) } : {}),
+    };
+  });
+}
+
 export function mapApiEvent(e: ApiEvent): Event {
   const statusMap: Record<string, EventStatus> = {
     draft: "draft",
@@ -68,8 +96,8 @@ export function mapApiEvent(e: ApiEvent): Event {
     vipCount: 0,
     noShowCount: 0,
     sponsors: e.sponsorIds ?? [],
-    speakers: [],
-    agenda: [],
+    speakers: mapApiSpeakers(e.speakers),
+    agenda: mapApiAgenda(e.agenda),
     attendees: [],
   };
 }
@@ -78,6 +106,7 @@ export function mapApiAttendee(a: ApiEventAttendee): EventAttendee {
   const rsvpMap: Record<string, RsvpStatus> = {
     confirmed: "confirmed",
     waitlist: "waitlist",
+    waitlisted: "waitlist",
     cancelled: "cancelled",
     canceled: "cancelled",
     "no-show": "no-show",

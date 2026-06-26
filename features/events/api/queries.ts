@@ -26,7 +26,7 @@ export function useEvent(id: string | null | undefined) {
   return useQuery({
     queryKey: eventKeys.detail(id ?? ""),
     queryFn: async () => {
-      const { data } = await apiFetch<ApiEvent>(`/api/events/${id}`);
+      const { data } = await apiFetch<ApiEvent>(`/api/events/admin/${id}`);
       return mapApiEvent(data);
     },
     enabled: Boolean(id),

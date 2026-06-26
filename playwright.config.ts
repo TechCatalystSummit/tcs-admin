@@ -1,4 +1,8 @@
+import { loadEnvConfig } from "@next/env";
 import { defineConfig, devices } from "@playwright/test";
+
+// Playwright runs outside Next.js — load .env / .env.local like `next dev` does.
+loadEnvConfig(process.cwd());
 
 export default defineConfig({
   testDir: "./e2e",

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { mapApiAttendee } from "./mappers";
+import { mapApiAttendee, mapApiEvent } from "./mappers";
 import type { ApiEventAttendee } from "./mappers";
 
 const baseAttendee: ApiEventAttendee = {
@@ -31,5 +31,23 @@ describe("event mappers", () => {
       user: { ...baseAttendee.user, tier: "unknown" },
     });
     expect(attendee.tier).toBe("community");
+  });
+
+  it("maps waitlisted RSVP status", () => {
+    const attendee = mapApiAttendee({ ...baseAttendee, status: "waitlisted" });
+    expect(attendee.rsvpStatus).toBe("waitlist");
+  });
+
+  it("maps API event speakers and agenda", () => {
+    const event = mapApiEvent({
+      id: "e1",
+      title: "Summit",
+      startsAt: "2026-01-01T09:00:00.000Z",
+      speakers: [{ name: "Jane", title: "CTO", company: "Acme", bio: "Bio" }],
+      agenda: [{ time: "10:00", title: "Keynote", speaker_id: "s1" }],
+    });
+    expect(event.speakers[0]?.name).toBe("Jane");
+    expect(event.agenda[0]?.title).toBe("Keynote");
+    expect(event.agenda[0]?.speakerId).toBe("s1");
   });
 });

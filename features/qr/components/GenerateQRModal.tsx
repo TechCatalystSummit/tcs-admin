@@ -20,6 +20,7 @@ const QR_TYPES = Object.keys(QR_TYPE_LABELS) as QRType[];
 export function GenerateQRModal() {
   const open = useQRStore((s) => s.generateOpen);
   const closeGenerate = useQRStore((s) => s.closeGenerate);
+  const selectCode = useQRStore((s) => s.selectCode);
   const createQR = useCreateQRCode();
   const { data: eventsData } = useAdminEvents();
 
@@ -58,7 +59,8 @@ export function GenerateQRModal() {
         eventId: eventId || undefined,
       },
       {
-        onSuccess: () => {
+        onSuccess: (created) => {
+          selectCode(created.id);
           reset();
           closeGenerate();
         },

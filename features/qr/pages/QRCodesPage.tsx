@@ -26,10 +26,13 @@ const exportColumns = [
 ];
 
 export default function QRCodesPage() {
-  const { data, isLoading, isError, error, refetch } = useQRCodesList();
+  const { data, isPending, isFetching, isError, error, refetch } = useQRCodesList();
   const codes = data?.codes ?? [];
   const selectedCodeId = useQRStore((s) => s.selectedCodeId);
   const selectCode = useQRStore((s) => s.selectCode);
+  const openGenerate = useQRStore((s) => s.openGenerate);
+
+  const isLoadingList = isPending || (isFetching && codes.length === 0);
 
   useEffect(() => {
     if (codes.length > 0 && !selectedCodeId) {
@@ -60,13 +63,15 @@ export default function QRCodesPage() {
       />
 
       <QueryBoundary
-        isLoading={isLoading}
+        isLoading={isLoadingList}
         isError={isError}
         error={error}
         onRetry={() => void refetch()}
-        isEmpty={!isLoading && !isError && codes.length === 0}
+        isEmpty={!isLoadingList && !isError && codes.length === 0}
         emptyTitle="No QR codes yet"
         emptyDescription="Generate a QR code to start tracking scans."
+        emptyActionLabel="Generate QR"
+        onEmptyAction={openGenerate}
       >
         <>
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">

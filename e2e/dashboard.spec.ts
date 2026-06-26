@@ -24,5 +24,25 @@ test.describe("Dashboard", () => {
   test("KPI labels visible", async ({ page }) => {
     await expect(page.getByText("Total Members")).toBeVisible({ timeout: 10_000 });
     await expect(page.getByText("Pending Approvals")).toBeVisible();
+    await expect(page.getByText("Upcoming Events")).toBeVisible();
+    await expect(page.getByText("Revenue (MTD)")).toBeVisible();
+  });
+
+  test("charts render after load", async ({ page }) => {
+    await expect(page.getByText("Revenue Trend — 6 Months")).toBeVisible({
+      timeout: 10_000,
+    });
+    await expect(page.getByText("Weekly New Signups")).toBeVisible();
+    // Charts should not stay on loading spinner once data arrives
+    await expect(page.locator(".recharts-responsive-container").first()).toBeVisible({
+      timeout: 15_000,
+    });
+  });
+
+  test("pending approvals section renders", async ({ page }) => {
+    await expect(page.getByText("Pending Approvals", { exact: true })).toBeVisible({
+      timeout: 10_000,
+    });
+    await expect(page.getByRole("link", { name: "View all" })).toBeVisible();
   });
 });

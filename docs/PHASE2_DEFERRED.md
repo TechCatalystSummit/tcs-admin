@@ -11,7 +11,8 @@ These admin modules remain on mock data until the corresponding tcs-api sprints 
 ## What exists today
 
 - QR per-code analytics: `GET /api/qr/:id/analytics` (wired in Phase 5)
-- Dashboard KPIs aggregate from members, events, intros, payments endpoints
+- Dashboard KPIs, charts, and activity feed: `GET /api/analytics/dashboard` (wired in Phase 2b)
+- Pending approvals widget: `GET /api/members/pending` (separate query from dashboard stats)
 
 ## Required endpoints (for API team)
 
@@ -29,8 +30,8 @@ These admin modules remain on mock data until the corresponding tcs-api sprints 
 
 ### Analytics (S20)
 
-- `GET /api/analytics/summary` — platform-wide KPIs
-- `GET /api/analytics/activity` — activity feed for dashboard
+- `GET /api/analytics/summary` — platform-wide KPIs (full `/analytics` page)
+- `GET /api/analytics/activity` — dedicated activity feed (dashboard uses `recentSignups` / `recentOutcomes` from `/api/analytics/dashboard` today)
 
 ## UI behavior
 
@@ -43,5 +44,5 @@ These sub-features remain limited until additional tcs-api endpoints ship:
 | Area | Wired today | Blocked on |
 |------|-------------|------------|
 | Dinner credit ledger | `POST /api/dinners/credits` adjust by member | `GET` admin list of all member balances |
-| Analytics KPIs/charts | `GET /api/outcomes` outcome log | S20 summary + activity feed |
+| Analytics KPIs/charts | `GET /api/outcomes` outcome log | S20 summary + dedicated activity feed for `/analytics` page |
 | Payment refunds | Read-only payment history | No refund POST endpoint |
