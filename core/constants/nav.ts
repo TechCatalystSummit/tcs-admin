@@ -10,6 +10,7 @@ import {
   Send,
   Users,
   UtensilsCrossed,
+  Video,
   type LucideIcon,
 } from "lucide-react";
 
@@ -48,6 +49,12 @@ export const navItems: NavItem[] = [
     label: "Events",
     href: "/events",
     icon: Calendar,
+    badge: null,
+  },
+  {
+    label: "Videos",
+    href: "/videos",
+    icon: Video,
     badge: null,
   },
   {
