@@ -2,7 +2,8 @@
 
 import { DataTable } from "@/shared/components/data-display/DataTable";
 import { Button } from "@/shared/components/ui/Button";
-import { formatCurrency, formatDate } from "@/shared/utils/formatters";
+import { formatDate } from "@/shared/utils/formatters";
+import Link from "next/link";
 import { type ColumnDef } from "@tanstack/react-table";
 import { useMemo } from "react";
 import { useDinnersStore } from "../store/useDinnersStore";
@@ -19,10 +20,20 @@ export function DinnersTable({ requests }: { requests: DinnerRequest[] }) {
         header: "Requester",
         cell: ({ row }) => (
           <div>
-            <p className="font-medium">{row.original.requesterName}</p>
+            <Link
+              href={`/members/${row.original.memberId}`}
+              className="font-medium text-blue1 hover:underline"
+            >
+              {row.original.requesterName}
+            </Link>
             <p className="text-xs text-muted">{row.original.requesterCompany}</p>
           </div>
         ),
+      },
+      {
+        accessorKey: "offeringTitle",
+        header: "Offering",
+        cell: ({ row }) => row.original.offeringTitle ?? "—",
       },
       {
         accessorKey: "purpose",
@@ -39,9 +50,9 @@ export function DinnersTable({ requests }: { requests: DinnerRequest[] }) {
         cell: ({ row }) => formatDate(row.original.preferredDate),
       },
       {
-        accessorKey: "budget",
+        accessorKey: "budgetRange",
         header: "Budget",
-        cell: ({ row }) => formatCurrency(row.original.budget),
+        cell: ({ row }) => row.original.budgetRange ?? "—",
       },
       {
         accessorKey: "status",

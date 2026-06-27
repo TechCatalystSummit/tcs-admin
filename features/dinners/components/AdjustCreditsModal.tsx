@@ -68,8 +68,9 @@ function AdjustCreditsForm({
   onClose: () => void;
 }) {
   const adjustCredits = useAdjustDinnerCredits();
+  const initialBalance = useDinnersStore((s) => s.adjustInitialBalance);
   const [userId, setUserId] = useState(initialMemberId ?? "");
-  const [balance, setBalance] = useState(1);
+  const [balance, setBalance] = useState(initialBalance ?? 1);
   const [reason, setReason] = useState<CreditAdjustReason>("annual_allocation");
   const [note, setNote] = useState("");
 

@@ -16,16 +16,36 @@ export type CreditAdjustReason =
   | "redemption"
   | "other";
 
+export interface DinnerOffering {
+  id: string;
+  title: string;
+  subtitle: string;
+  description?: string;
+  imageUrl?: string;
+  tagLabel: string;
+  tagVariant: "blue" | "gold" | "green";
+  tierRequirement: string;
+  seatsTotal: number;
+  seatsAvailable: number;
+  eventDate?: string;
+  isFeatured: boolean;
+  isActive: boolean;
+  sortOrder: number;
+}
+
 export interface DinnerRequest {
   id: string;
   memberId: string;
   requesterName: string;
   requesterCompany: string;
+  whoToMeet?: string;
   purpose: string;
   preferredDate: string;
-  budget: number;
+  budgetRange?: string;
   guestCount: number;
   location?: string;
+  offeringId?: string;
+  offeringTitle?: string;
   status: DinnerStatus;
   creditsUsed: number;
   adminNotes?: string;
@@ -37,10 +57,11 @@ export interface DinnerRequest {
 export interface CreditRecord {
   memberId: string;
   memberName: string;
-  tier: TierId;
+  memberEmail: string;
+  tier?: TierId;
   balance: number;
   used: number;
-  expiresAt: string;
+  expiresAt: string | null;
 }
 
 export interface CreditAdjustment {
