@@ -10,7 +10,7 @@ const statusConfig: Record<
   approved: { label: "Approved", variant: "gradient" },
   scheduled: { label: "Scheduled", variant: "gradient" },
   completed: { label: "Completed", variant: "status" },
-  declined: { label: "Declined", variant: "default" },
+  declined: { label: "Canceled", variant: "default" },
 };
 
 export function DinnerStatusBadge({ status }: { status: DinnerStatus }) {
