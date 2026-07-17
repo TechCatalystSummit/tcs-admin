@@ -40,7 +40,12 @@ export function MemberProfilePanel({
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-start gap-4">
-          <Avatar name={member.name} size="lg" executive={member.tier === "executive"} />
+          <Avatar
+            name={member.name}
+            src={member.photoUrl}
+            size="lg"
+            executive={member.tier === "executive"}
+          />
           <div>
             <h2 className="text-xl font-bold text-ink">{member.name}</h2>
             <p className="text-sm text-muted">{member.title} · {member.company}</p>

@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/shared/components/ui/Button";
+import { ImageUploadField } from "@/shared/components/ui/ImageUploadField";
 import { Input } from "@/shared/components/ui/Input";
 import { Textarea } from "@/shared/components/ui/Textarea";
 import { cn } from "@/shared/utils/cn";
@@ -129,11 +130,12 @@ function OfferingForm({
         onChange={(e) => setDescription(e.target.value)}
         rows={3}
       />
-      <Input
-        label="Image URL"
+      <ImageUploadField
+        label="Image"
         value={imageUrl}
-        onChange={(e) => setImageUrl(e.target.value)}
-        placeholder="https://…"
+        onChange={setImageUrl}
+        kind="dinner-image"
+        entityId={initial?.id}
       />
       <div className="grid grid-cols-2 gap-3">
         <Input label="Tag label" value={tagLabel} onChange={(e) => setTagLabel(e.target.value)} />

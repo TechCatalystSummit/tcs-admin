@@ -7,6 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/shared/components/ui/Dialog";
+import { ImageUploadField } from "@/shared/components/ui/ImageUploadField";
 import { Input } from "@/shared/components/ui/Input";
 import { Textarea } from "@/shared/components/ui/Textarea";
 import { cn } from "@/shared/utils/cn";
@@ -48,6 +49,8 @@ export function VideoFormModal({ mode, videoId, open, onClose }: VideoFormModalP
     register,
     handleSubmit,
     reset,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<VideoFormValues>({
     resolver: zodResolver(videoSchema),
@@ -78,6 +81,8 @@ export function VideoFormModal({ mode, videoId, open, onClose }: VideoFormModalP
             status: "active",
           },
   });
+
+  const thumbnailUrl = watch("thumbnailUrl") ?? "";
 
   const onSubmit = (data: VideoFormValues) => {
     const payload = {
@@ -132,10 +137,11 @@ export function VideoFormModal({ mode, videoId, open, onClose }: VideoFormModalP
             placeholder="https://youtube.com/watch?v=… or dQw4w9WgXcQ"
             required
           />
-          <Input
-            label="Thumbnail URL"
-            {...register("thumbnailUrl")}
-            placeholder="Optional — auto-derived from YouTube if empty"
+          <ImageUploadField
+            label="Thumbnail"
+            value={thumbnailUrl}
+            onChange={(url) => setValue("thumbnailUrl", url, { shouldDirty: true })}
+            kind="admin-asset"
           />
           <Textarea label="Description" {...register("description")} rows={3} />
           <div className="grid grid-cols-2 gap-4">

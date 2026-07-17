@@ -30,6 +30,7 @@ export function mapProfileToAdminMember(profile: ApiProfile): AdminMember {
     role: profile.roleCategory ?? profile.role ?? "member",
     status: deriveStatus(profile),
     isVerified: profile.isVerified ?? false,
+    photoUrl: profile.photoUrl ?? undefined,
     linkedinUrl: profile.linkedinUrl ?? undefined,
     bio: profile.bio ?? "",
     lookingFor: profile.lookingFor ?? [],

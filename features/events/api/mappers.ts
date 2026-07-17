@@ -143,6 +143,7 @@ export function formToCreateBody(data: {
   endDate: string;
   capacity: number;
   status: string;
+  coverImageUrl?: string;
 }) {
   const slug = data.title
     .toLowerCase()
@@ -159,5 +160,6 @@ export function formToCreateBody(data: {
     city: data.location,
     venueName: data.venue,
     capacity: data.capacity,
+    coverImageUrl: data.coverImageUrl || undefined,
   };
 }

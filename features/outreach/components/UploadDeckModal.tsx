@@ -8,6 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/shared/components/ui/Dialog";
+import { FileUploadField } from "@/shared/components/ui/ImageUploadField";
 import { Input } from "@/shared/components/ui/Input";
 import { useState } from "react";
 import { useOutreachStore } from "../store/useOutreachStore";
@@ -86,7 +87,7 @@ export function UploadDeckModal() {
               ))}
             </select>
           </div>
-          <Input label="File URL" value={fileUrl} onChange={(e) => setFileUrl(e.target.value)} placeholder="https://..." required />
+          <FileUploadField label="Deck file" value={fileUrl} onChange={setFileUrl} />
           <label className="flex items-center gap-2 text-sm text-ink2">
             <input type="checkbox" checked={isActive} onChange={(e) => setIsActive(e.target.checked)} className="rounded" />
             Active

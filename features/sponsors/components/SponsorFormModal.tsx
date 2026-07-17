@@ -7,6 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/shared/components/ui/Dialog";
+import { ImageUploadField } from "@/shared/components/ui/ImageUploadField";
 import { Input } from "@/shared/components/ui/Input";
 import { Textarea } from "@/shared/components/ui/Textarea";
 import { cn } from "@/shared/utils/cn";
@@ -47,6 +48,8 @@ export function SponsorFormModal({ mode, sponsorId, open, onClose }: SponsorForm
     register,
     handleSubmit,
     reset,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<SponsorFormValues>({
     resolver: zodResolver(sponsorSchema),
@@ -58,9 +61,9 @@ export function SponsorFormModal({ mode, sponsorId, open, onClose }: SponsorForm
             industry: sponsor.industry,
             tier: sponsor.tier,
             description: sponsor.description,
-            logoUrl: "",
-            ctaLabel: "",
-            ctaUrl: "",
+            logoUrl: sponsor.logoUrl ?? "",
+            ctaLabel: sponsor.ctaLabel ?? "",
+            ctaUrl: sponsor.ctaUrl ?? "",
             status: sponsor.status,
           }
         : {
@@ -76,6 +79,8 @@ export function SponsorFormModal({ mode, sponsorId, open, onClose }: SponsorForm
           },
   });
 
+  const logoUrl = watch("logoUrl") ?? "";
+
   const onSubmit = (data: SponsorFormValues) => {
     const payload = {
       name: data.name,
@@ -83,7 +88,7 @@ export function SponsorFormModal({ mode, sponsorId, open, onClose }: SponsorForm
       industry: data.industry,
       tier: data.tier as SponsorTier,
       description: data.description,
-      logoUrl: data.logoUrl,
+      logoUrl: data.logoUrl || undefined,
       ctaLabel: data.ctaLabel,
       ctaUrl: data.ctaUrl,
       status: data.status as SponsorStatus | undefined,
@@ -162,7 +167,13 @@ export function SponsorFormModal({ mode, sponsorId, open, onClose }: SponsorForm
             <Input label="CTA label" {...register("ctaLabel")} placeholder="Learn more" />
             <Input label="CTA URL" {...register("ctaUrl")} placeholder="https://" />
           </div>
-          <Input label="Logo URL" {...register("logoUrl")} placeholder="https://" />
+          <ImageUploadField
+            label="Logo"
+            value={logoUrl}
+            onChange={(url) => setValue("logoUrl", url, { shouldDirty: true })}
+            kind="sponsor-logo"
+            entityId={mode === "edit" ? sponsorId ?? undefined : undefined}
+          />
           <div className="flex justify-end gap-2 pt-2">
             <Button type="button" variant="ghost" onClick={onClose}>
               Cancel

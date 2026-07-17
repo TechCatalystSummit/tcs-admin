@@ -13,6 +13,7 @@ export interface AdminMember {
   role: string;
   status: MemberStatus;
   isVerified: boolean;
+  photoUrl?: string;
   linkedinUrl?: string;
   bio: string;
   lookingFor: string[];

@@ -32,6 +32,9 @@ export interface Sponsor {
   id: string;
   name: string;
   logoInitials: string;
+  logoUrl?: string;
+  ctaLabel?: string;
+  ctaUrl?: string;
   tier: SponsorTier;
   status: SponsorStatus;
   website: string;

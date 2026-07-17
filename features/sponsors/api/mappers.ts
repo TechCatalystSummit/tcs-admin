@@ -10,6 +10,8 @@ export interface ApiSponsor {
   description?: string | null;
   industry?: string | null;
   tier?: string | null;
+  ctaLabel?: string | null;
+  ctaUrl?: string | null;
   isActive?: boolean;
   createdAt?: string;
 }
@@ -38,6 +40,9 @@ export function mapApiSponsor(s: ApiSponsor): Sponsor {
     id: s.id,
     name: s.name,
     logoInitials: initials,
+    logoUrl: s.logoUrl ?? undefined,
+    ctaLabel: s.ctaLabel ?? undefined,
+    ctaUrl: s.ctaUrl ?? undefined,
     tier: tierMap[s.tier ?? "partner"] ?? "partner",
     status: (s.isActive === false ? "inactive" : "active") as SponsorStatus,
     website: s.website ?? "",

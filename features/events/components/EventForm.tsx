@@ -6,6 +6,7 @@ import { SpeakerManager } from "../components/SpeakerManager";
 import { Button } from "@/shared/components/ui/Button";
 import { Card, CardContent, CardHeader } from "@/shared/components/ui/Card";
 import { GradientButton } from "@/shared/components/ui/GradientButton";
+import { ImageUploadField } from "@/shared/components/ui/ImageUploadField";
 import { Input } from "@/shared/components/ui/Input";
 import { Textarea } from "@/shared/components/ui/Textarea";
 import { useState } from "react";
@@ -37,6 +38,7 @@ interface EventFormProps {
 export function EventForm({ onSubmit, onCancel, isSubmitting }: EventFormProps) {
   const [speakers, setSpeakers] = useState<Speaker[]>([]);
   const [agenda, setAgenda] = useState<AgendaItem[]>([]);
+  const [coverImageUrl, setCoverImageUrl] = useState("");
 
   const {
     register,
@@ -59,7 +61,9 @@ export function EventForm({ onSubmit, onCancel, isSubmitting }: EventFormProps) 
 
   return (
     <form
-      onSubmit={handleSubmit((data) => onSubmit({ ...data, speakers, agenda }))}
+      onSubmit={handleSubmit((data) =>
+        onSubmit({ ...data, speakers, agenda, coverImageUrl: coverImageUrl || undefined }),
+      )}
       className="space-y-6"
     >
       <Card>
@@ -69,6 +73,12 @@ export function EventForm({ onSubmit, onCancel, isSubmitting }: EventFormProps) 
         <CardContent className="space-y-4">
           <Input label="Event Title" error={errors.title?.message} {...register("title")} />
           <Textarea label="Description" error={errors.description?.message} {...register("description")} />
+          <ImageUploadField
+            label="Cover image"
+            value={coverImageUrl}
+            onChange={setCoverImageUrl}
+            kind="event-cover"
+          />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <label htmlFor="type" className="text-xs font-medium text-ink2">Event Type</label>

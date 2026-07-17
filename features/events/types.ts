@@ -72,4 +72,5 @@ export interface EventFormData {
   status: "draft" | "published";
   speakers: Speaker[];
   agenda: AgendaItem[];
+  coverImageUrl?: string;
 }
