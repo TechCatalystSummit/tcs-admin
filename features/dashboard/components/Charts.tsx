@@ -46,7 +46,7 @@ export function RevenueChart() {
               <YAxis hide />
               <Tooltip
                 contentStyle={{ borderRadius: 8, border: "1px solid #E8E8EB", fontSize: 12 }}
-                formatter={(v) => [`$${Number(v).toLocaleString()}`, "Revenue"]}
+                formatter={(v) => [`$${Number(v).toLocaleString("en-US")}`, "Revenue"]}
               />
               <Area type="monotone" dataKey="value" stroke="#1A73E8" fill="url(#revenueGradient)" strokeWidth={2} />
             </AreaChart>

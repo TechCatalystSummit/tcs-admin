@@ -5,11 +5,18 @@ export type LeadStatus =
   | "clicked"
   | "replied"
   | "booked"
-  | "confirmed";
+  | "confirmed"
+  | "proposal_sent"
+  | "negotiating"
+  | "not_interested"
+  | "follow_up_later";
 
 export type LeadStage = "hot" | "warm" | "new" | "contacted";
 
-export type TemplateType =
+// API templates use free-form types (e.g. "cold_outreach"), so any string is allowed.
+export type TemplateType = KnownTemplateType | (string & {});
+
+export type KnownTemplateType =
   | "initial-outreach"
   | "follow-up"
   | "event-invite"
@@ -145,6 +152,10 @@ export const LEAD_STATUS_LABELS: Record<LeadStatus, string> = {
   replied: "Replied",
   booked: "Booked",
   confirmed: "Confirmed",
+  proposal_sent: "Proposal Sent",
+  negotiating: "Negotiating",
+  not_interested: "Not Interested",
+  follow_up_later: "Follow Up Later",
 };
 
 export const LEAD_STAGE_LABELS: Record<LeadStage, string> = {
@@ -154,7 +165,7 @@ export const LEAD_STAGE_LABELS: Record<LeadStage, string> = {
   contacted: "Contacted",
 };
 
-export const TEMPLATE_TYPE_LABELS: Record<TemplateType, string> = {
+export const TEMPLATE_TYPE_LABELS: Record<KnownTemplateType, string> = {
   "initial-outreach": "Initial Outreach",
   "follow-up": "Follow-up",
   "event-invite": "Event Invite",

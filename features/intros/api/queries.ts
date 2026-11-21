@@ -15,7 +15,7 @@ export function useIntrosList(params?: { status?: string; direction?: string }) 
     queryFn: async () => {
       const { data, meta } = await apiFetch<ApiIntro[]>("/api/intros", {
         params: {
-          direction: params?.direction ?? "all",
+          direction: params?.direction ?? "admin",
           status: params?.status,
           page: 1,
           perPage: 100,

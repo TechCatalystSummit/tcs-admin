@@ -26,7 +26,7 @@ export function IntroConversionFunnel() {
               <div className="flex items-center justify-between text-sm mb-1">
                 <span className="font-medium text-ink">{step.label}</span>
                 <span className="text-muted">
-                  {step.count.toLocaleString()}
+                  {step.count.toLocaleString("en-US")}
                   {index > 0 && (
                     <span className="text-hint ml-2">({formatPercent(conversionRate)})</span>
                   )}

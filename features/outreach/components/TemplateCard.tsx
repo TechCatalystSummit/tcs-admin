@@ -6,7 +6,7 @@ import { formatDate } from "@/shared/utils/formatters";
 import { Pencil, Copy, Trash2 } from "lucide-react";
 import { useOutreachStore } from "../store/useOutreachStore";
 import type { Template } from "../types";
-import { TEMPLATE_TYPE_LABELS } from "../types";
+import { TEMPLATE_TYPE_LABELS, type KnownTemplateType } from "../types";
 
 interface TemplateCardProps {
   template: Template;
@@ -23,7 +23,7 @@ export function TemplateCard({ template }: TemplateCardProps) {
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
             <h3 className="font-semibold text-ink">{template.name}</h3>
-            <p className="text-xs text-muted mt-0.5">{TEMPLATE_TYPE_LABELS[template.type]}</p>
+            <p className="text-xs text-muted mt-0.5">{TEMPLATE_TYPE_LABELS[template.type as KnownTemplateType] ?? template.type}</p>
             {template.lastUsed && (
               <p className="text-[10px] text-hint mt-1">Last used {formatDate(template.lastUsed)}</p>
             )}

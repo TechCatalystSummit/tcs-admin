@@ -1,6 +1,5 @@
 "use client";
 
-import { MockDataBanner } from "@/shared/components/MockDataBanner";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 import { SectionLabel } from "@/shared/components/ui/SectionLabel";
 import Link from "next/link";
@@ -21,7 +20,6 @@ export default function OutreachPage() {
         title="Outreach Command Center"
         subtitle="Quick send, stats, and active sequences"
       />
-      <MockDataBanner module="Outreach" apiSprint="tcs-api S18–S19" />
       <div className="space-y-8">
         <QuickSendCard />
         <OutreachStatsStrip />

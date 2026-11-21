@@ -25,6 +25,10 @@ const statuses = [
   { value: "replied", label: "Replied" },
   { value: "booked", label: "Booked" },
   { value: "confirmed", label: "Confirmed" },
+  { value: "proposal_sent", label: "Proposal Sent" },
+  { value: "negotiating", label: "Negotiating" },
+  { value: "not_interested", label: "Not Interested" },
+  { value: "follow_up_later", label: "Follow Up Later" },
 ];
 
 const sources = ["", "TCS Miami Event", "LinkedIn", "Member Referral", "Cold Outreach", "QR Scan", "Website Form", "TCS NYC Event", "TCS Boston Event"];

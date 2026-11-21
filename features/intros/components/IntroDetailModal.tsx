@@ -1,5 +1,6 @@
 "use client";
 
+import { useAuthStore } from "@/features/auth/store/useAuthStore";
 import { Button } from "@/shared/components/ui/Button";
 import {
   Dialog,
@@ -32,6 +33,7 @@ export function IntroDetailModal() {
   const approveIntro = useApproveIntro();
   const declineIntro = useDeclineIntro();
   const patchIntro = usePatchIntro();
+  const adminId = useAuthStore((s) => s.user?.id);
   const isMutating = approveIntro.isPending || declineIntro.isPending || patchIntro.isPending;
 
   const [note, setNote] = useState("");
@@ -108,6 +110,26 @@ export function IntroDetailModal() {
                   Decline
                 </Button>
               </>
+            )}
+            {intro.status === "approved" && (
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={isMutating}
+                onClick={() => patchIntro.mutate({ id: intro.id, body: { status: "follow_up_needed" } })}
+              >
+                Follow-up needed
+              </Button>
+            )}
+            {adminId && intro.assignedTo !== adminId && (
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={isMutating}
+                onClick={() => patchIntro.mutate({ id: intro.id, body: { assignedTo: adminId } })}
+              >
+                Assign to me
+              </Button>
             )}
             {intro.status === "approved" && (
               <Button

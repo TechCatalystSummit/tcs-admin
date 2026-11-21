@@ -56,7 +56,7 @@ export function mapDashboardKpis(stats: ApiDashboardStats): DashboardKPI[] {
     },
     {
       label: "Revenue (MTD)",
-      value: `$${mtdDollars.toLocaleString()}`,
+      value: `$${mtdDollars.toLocaleString("en-US")}`,
       delta: formatDashboardDelta(stats.revenue.mtdDeltaPct, "Month to date"),
       deltaType:
         stats.revenue.mtdDeltaPct !== undefined

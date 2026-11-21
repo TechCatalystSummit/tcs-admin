@@ -9,6 +9,7 @@ export interface ApiIntro {
   status: string;
   outcome?: string | null;
   admin_note?: string | null;
+  assigned_to?: string | null;
   created_at: string;
   updated_at?: string;
   from?: {
@@ -65,5 +66,6 @@ export function mapApiIntro(row: ApiIntro): IntroRequest {
     requestedAt: row.created_at,
     outcome: row.outcome ?? undefined,
     adminNotes: row.admin_note ?? undefined,
+    assignedTo: row.assigned_to ?? undefined,
   };
 }

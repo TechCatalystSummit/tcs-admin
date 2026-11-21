@@ -7,7 +7,7 @@ export function SponsorKPIRow({ sponsor }: { sponsor: Sponsor }) {
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
       <StatCard
         label="QR Scans"
-        value={sponsor.qrScans.toLocaleString()}
+        value={sponsor.qrScans.toLocaleString("en-US")}
         delta="+12% vs last event"
         deltaType="positive"
         topColor="#1A73E8"

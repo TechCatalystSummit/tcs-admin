@@ -42,11 +42,13 @@ export function CreateIntroModal() {
   const { data: membersData } = useMembersList();
   const members = membersData?.members ?? [];
 
+  const [fromMemberId, setFromMemberId] = useState("");
   const [toMemberId, setToMemberId] = useState("");
   const [reason, setReason] = useState<IntroReason>("partnership");
   const [reasonDetail, setReasonDetail] = useState("");
 
   const resetForm = () => {
+    setFromMemberId("");
     setToMemberId("");
     setReason("partnership");
     setReasonDetail("");
@@ -59,13 +61,14 @@ export function CreateIntroModal() {
     }
   };
 
-  const canSubmit = toMemberId && reasonDetail.trim().length > 0;
+  const canSubmit = fromMemberId && toMemberId && fromMemberId !== toMemberId && reasonDetail.trim().length > 0;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!canSubmit) return;
     createIntro.mutate(
       {
+        fromUserId: fromMemberId,
         toUserId: toMemberId,
         reason: REASON_TO_API[reason],
         message: reasonDetail.trim(),
@@ -85,11 +88,30 @@ export function CreateIntroModal() {
         <DialogHeader>
           <DialogTitle>Create Intro</DialogTitle>
           <DialogDescription>
-            Create an introduction request to a member (sent from your admin account).
+            Introduce two members. The intro starts approved and the recipient is notified.
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-1.5">
+            <label htmlFor="from-member" className="text-xs font-medium text-ink2">
+              Member (From)
+            </label>
+            <select
+              id="from-member"
+              value={fromMemberId}
+              onChange={(e) => setFromMemberId(e.target.value)}
+              className="h-11 w-full rounded-xl border border-border bg-white px-3 text-sm text-ink"
+            >
+              <option value="">Select member...</option>
+              {members.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.name} · {m.company}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <div className="space-y-1.5">
             <label htmlFor="to-member" className="text-xs font-medium text-ink2">
               Member (To)

@@ -13,6 +13,10 @@ const statusConfig: Record<
   replied: { variant: "status" },
   booked: { variant: "tier" },
   confirmed: { variant: "status", className: "bg-gold-l text-gold border-gold/20" },
+  proposal_sent: { variant: "default" },
+  negotiating: { variant: "tier" },
+  not_interested: { variant: "default", className: "bg-surf text-muted border-border" },
+  follow_up_later: { variant: "default" },
 };
 
 export function LeadStatusBadge({ status }: { status: LeadStatus }) {

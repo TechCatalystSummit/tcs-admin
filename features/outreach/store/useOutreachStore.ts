@@ -2,15 +2,21 @@
 
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
+import { apiFetch } from "@/shared/lib/api/client";
+import { showMutationError } from "@/shared/lib/api/handleApiError";
+import { toast } from "sonner";
 import {
-  mockDecks,
-  mockOutreachChartData,
-  mockOutreachEvents,
-  mockOutreachStats,
-} from "../data/mockDecks";
-import { mockLeads } from "../data/mockLeads";
-import { mockSequences } from "../data/mockSequences";
-import { mockTemplates } from "../data/mockTemplates";
+  leadStatusToApi,
+  mapContact,
+  mapDeck,
+  mapSequence,
+  mapTemplate,
+  type ApiContact,
+  type ApiDeck,
+  type ApiOutreachAnalytics,
+  type ApiSequence,
+  type ApiTemplate,
+} from "../api/mappers";
 import type {
   AddLeadInput,
   Deck,
@@ -23,14 +29,19 @@ import type {
   Template,
 } from "../types";
 
+const emptyStats = { sentToday: 0, opensToday: 0, clicksToday: 0, repliesToday: 0 };
+
 interface OutreachState {
+  loading: boolean;
+  loadError: string | null;
+  load: () => Promise<void>;
   leads: Lead[];
   sequences: Sequence[];
   templates: Template[];
   decks: Deck[];
-  events: typeof mockOutreachEvents;
+  events: { id: string; label: string }[];
   chartData: OutreachChartPoint[];
-  stats: typeof mockOutreachStats;
+  stats: typeof emptyStats;
   filters: LeadFilters;
   selectedLeadIds: string[];
   activeLeadId: string | null;
@@ -83,20 +94,54 @@ const defaultQuickSend: QuickSendState = {
   email: "",
   name: "",
   company: "",
-  eventId: "evt_summit",
-  deckId: "deck_001",
-  templateId: "tpl_001",
+  // Empty = let the API auto-pick the next sponsorable event, default deck and template.
+  eventId: "",
+  deckId: "",
+  templateId: "",
 };
 
 export const useOutreachStore = create<OutreachState>()(
   immer((set, get) => ({
-    leads: mockLeads,
-    sequences: mockSequences,
-    templates: mockTemplates,
-    decks: mockDecks,
-    events: mockOutreachEvents,
-    chartData: mockOutreachChartData,
-    stats: mockOutreachStats,
+    loading: false,
+    loadError: null,
+    load: async () => {
+      set((st) => { st.loading = true; st.loadError = null; });
+      try {
+        const [contacts, templates, decks, sequences, events, analytics] = await Promise.all([
+          apiFetch<ApiContact[]>("/api/outreach/contacts", { params: { page: 1, perPage: 100 } }),
+          apiFetch<ApiTemplate[]>("/api/outreach/templates", { params: { page: 1, perPage: 100 } }),
+          apiFetch<ApiDeck[]>("/api/outreach/decks", { params: { page: 1, perPage: 100 } }),
+          apiFetch<ApiSequence[]>("/api/outreach/sequences", { params: { page: 1, perPage: 100 } }),
+          apiFetch<{ id: string; title: string }[]>("/api/events/admin", { params: { page: 1, perPage: 100 } }),
+          apiFetch<ApiOutreachAnalytics>("/api/outreach/analytics"),
+        ]);
+        set((st) => {
+          st.leads = contacts.data.map(mapContact);
+          st.templates = templates.data.map(mapTemplate);
+          st.decks = decks.data.map(mapDeck);
+          st.sequences = sequences.data.map(mapSequence);
+          st.events = events.data.map((e) => ({ id: e.id, label: e.title }));
+          const a = analytics.data;
+          st.stats = {
+            sentToday: a.today.sent,
+            opensToday: a.today.opens,
+            clicksToday: a.today.clicks,
+            repliesToday: a.today.replies,
+          };
+          st.chartData = a.chart.map((c) => ({ date: c.date.slice(5), sent: c.sent, openRate: c.openRate / 100 }));
+          st.loading = false;
+        });
+      } catch (e) {
+        set((st) => { st.loading = false; st.loadError = e instanceof Error ? e.message : "Failed to load outreach data"; });
+      }
+    },
+    leads: [],
+    sequences: [],
+    templates: [],
+    decks: [],
+    events: [],
+    chartData: [],
+    stats: emptyStats,
     filters: defaultFilters,
     selectedLeadIds: [],
     activeLeadId: null,
@@ -143,90 +188,155 @@ export const useOutreachStore = create<OutreachState>()(
         state.templateEditorOpen = false;
         state.activeTemplateId = null;
       }),
-    addLead: (input) =>
-      set((state) => {
-        const nextId = `lead_${String(state.leads.length + 1).padStart(3, "0")}`;
-        state.leads.unshift({
-          id: nextId,
-          ...input,
-          stage: "new",
-          lastContacted: new Date().toISOString().slice(0, 10),
-          opens: 0,
-          clicks: 0,
-          replies: 0,
-          meetingBooked: false,
-          activity: [],
+    addLead: (input) => {
+      void apiFetch("/api/outreach/contacts", {
+        method: "POST",
+        body: {
+          name: input.name,
+          email: input.email,
+          company: input.company || undefined,
+          title: input.title || undefined,
+          phone: input.phone || undefined,
+          industry: input.industry || undefined,
+          source: input.source || undefined,
+          sponsorType: input.sponsorType || undefined,
+          eventInterest: input.eventInterest || undefined,
+          consentSource: "admin_manual_entry",
+        },
+      }).then(async () => {
+        set((state) => { state.addLeadModalOpen = false; });
+        toast.success("Lead added");
+        await get().load();
+      }, showMutationError);
+    },
+    updateLeadStatus: (id, status) => {
+      void apiFetch(`/api/outreach/contacts/${id}`, {
+        method: "PATCH",
+        body: { status: leadStatusToApi(status) },
+      }).then(() => {
+        set((state) => {
+          const lead = state.leads.find((l) => l.id === id);
+          if (lead) lead.status = status;
         });
-        state.addLeadModalOpen = false;
-      }),
-    updateLeadStatus: (id, status) =>
-      set((state) => {
-        const lead = state.leads.find((l) => l.id === id);
-        if (lead) lead.status = status;
-      }),
-    deleteLeads: (ids) =>
-      set((state) => {
-        state.leads = state.leads.filter((l) => !ids.includes(l.id));
-        state.selectedLeadIds = state.selectedLeadIds.filter((id) => !ids.includes(id));
-      }),
-    toggleSequence: (id) =>
-      set((state) => {
-        const seq = state.sequences.find((s) => s.id === id);
-        if (seq) seq.status = seq.status === "active" ? "paused" : "active";
-      }),
-    toggleDeckActive: (id) =>
-      set((state) => {
-        const deck = state.decks.find((d) => d.id === id);
-        if (deck) deck.isActive = !deck.isActive;
-      }),
-    toggleDeckDefault: (id) =>
-      set((state) => {
-        const deck = state.decks.find((d) => d.id === id);
-        if (!deck) return;
-        state.decks.forEach((d) => {
-          if (d.type === deck.type) d.isDefault = d.id === id;
+      }, showMutationError);
+    },
+    deleteLeads: (ids) => {
+      void Promise.all(
+        ids.map((id) => apiFetch(`/api/outreach/contacts/${id}`, { method: "DELETE" })),
+      ).then(() => {
+        set((state) => {
+          state.leads = state.leads.filter((l) => !ids.includes(l.id));
+          state.selectedLeadIds = state.selectedLeadIds.filter((id) => !ids.includes(id));
         });
-      }),
-    updateTemplate: (id, updates) =>
-      set((state) => {
-        const tpl = state.templates.find((t) => t.id === id);
-        if (tpl) Object.assign(tpl, updates);
-      }),
-    deleteTemplate: (id) =>
-      set((state) => {
-        state.templates = state.templates.filter((t) => t.id !== id);
-      }),
-    duplicateTemplate: (id) =>
-      set((state) => {
-        const tpl = state.templates.find((t) => t.id === id);
-        if (!tpl) return;
-        const nextId = `tpl_${String(state.templates.length + 1).padStart(3, "0")}`;
-        state.templates.unshift({
-          ...tpl,
-          id: nextId,
+      }, showMutationError);
+    },
+    toggleSequence: (id) => {
+      const seq = get().sequences.find((s) => s.id === id);
+      if (!seq) return;
+      const isActive = seq.status !== "active";
+      void apiFetch(`/api/outreach/sequences/${id}`, { method: "PATCH", body: { isActive } }).then(() => {
+        set((state) => {
+          const s = state.sequences.find((x) => x.id === id);
+          if (s) s.status = isActive ? "active" : "paused";
+        });
+      }, showMutationError);
+    },
+    toggleDeckActive: (id) => {
+      const deck = get().decks.find((d) => d.id === id);
+      if (!deck) return;
+      void apiFetch(`/api/outreach/decks/${id}`, {
+        method: "PATCH",
+        body: { isActive: !deck.isActive },
+      }).then(() => {
+        set((state) => {
+          const d = state.decks.find((x) => x.id === id);
+          if (d) d.isActive = !d.isActive;
+        });
+      }, showMutationError);
+    },
+    toggleDeckDefault: (id) => {
+      void apiFetch(`/api/outreach/decks/${id}`, {
+        method: "PATCH",
+        body: { isDefault: true },
+      }).then(() => get().load(), showMutationError);
+    },
+    updateTemplate: (id, updates) => {
+      const body: Record<string, unknown> = {};
+      if (updates.name !== undefined) body.name = updates.name;
+      if (updates.subject !== undefined) body.subject = updates.subject;
+      if (updates.body !== undefined) body.bodyHtml = updates.body;
+      void apiFetch(`/api/outreach/templates/${id}`, { method: "PATCH", body }).then(() => {
+        set((state) => {
+          const tpl = state.templates.find((t) => t.id === id);
+          if (tpl) Object.assign(tpl, updates);
+        });
+        toast.success("Template saved");
+      }, showMutationError);
+    },
+    deleteTemplate: (id) => {
+      void apiFetch(`/api/outreach/templates/${id}`, { method: "DELETE" }).then(() => {
+        set((state) => {
+          state.templates = state.templates.filter((t) => t.id !== id);
+        });
+      }, showMutationError);
+    },
+    duplicateTemplate: (id) => {
+      const tpl = get().templates.find((t) => t.id === id);
+      if (!tpl) return;
+      void apiFetch("/api/outreach/templates", {
+        method: "POST",
+        body: {
           name: `${tpl.name} (Copy)`,
-          lastUsed: undefined,
-        });
-      }),
-    addDeck: (deck) =>
-      set((state) => {
-        const nextId = `deck_${String(state.decks.length + 1).padStart(3, "0")}`;
-        state.decks.unshift({
-          ...deck,
-          id: nextId,
-          lastUpdated: new Date().toISOString().slice(0, 10),
-        });
-        state.uploadDeckModalOpen = false;
-      }),
+          templateType: tpl.type,
+          subject: tpl.subject,
+          bodyHtml: tpl.body,
+          variables: tpl.variables,
+        },
+      }).then(() => get().load(), showMutationError);
+    },
+    addDeck: (deck) => {
+      void apiFetch("/api/outreach/decks", {
+        method: "POST",
+        body: {
+          title: deck.title,
+          deckType: deck.type,
+          fileUrl: deck.fileUrl,
+          version: deck.version,
+          eventId: deck.eventAssociation || undefined,
+          isActive: deck.isActive,
+        },
+      }).then(async () => {
+        set((state) => { state.uploadDeckModalOpen = false; });
+        toast.success("Deck added");
+        await get().load();
+      }, showMutationError);
+    },
     setQuickSendField: (key, value) =>
       set((state) => {
         state.quickSend[key] = value;
       }),
-    sendQuickEmail: () =>
-      set((state) => {
-        state.stats.sentToday += 1;
-        state.quickSend = { ...defaultQuickSend };
-      }),
+    sendQuickEmail: () => {
+      const q = get().quickSend;
+      if (!q.email.trim()) {
+        toast.error("Enter an email address");
+        return;
+      }
+      void apiFetch("/api/outreach/quick-send", {
+        method: "POST",
+        body: {
+          email: q.email.trim(),
+          name: q.name.trim() || undefined,
+          company: q.company.trim() || undefined,
+          eventId: q.eventId || undefined,
+          deckId: q.deckId || undefined,
+          templateId: q.templateId || undefined,
+        },
+      }).then(async () => {
+        toast.success("Email sent");
+        set((state) => { state.quickSend = { ...defaultQuickSend }; });
+        await get().load();
+      }, showMutationError);
+    },
     getFilteredLeads: () => {
       const { leads, filters } = get();
       return leads.filter((lead) => {

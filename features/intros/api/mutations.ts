@@ -50,11 +50,12 @@ export function useCreateIntro() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (body: {
+      fromUserId: string;
       toUserId: string;
       reason: string;
       message?: string;
     }) => {
-      await apiFetch("/api/intros", { method: "POST", body });
+      await apiFetch("/api/intros/admin", { method: "POST", body });
     },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: introKeys.all });
